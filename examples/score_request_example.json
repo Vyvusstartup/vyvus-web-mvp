@@ -1,0 +1,16 @@
+{
+  "age_band": "30-39",
+  "sex": "F",
+  "metrics": {
+    "vo2max_mlkgmin": 40,
+    "steps_per_day": 7000,
+    "mvpa_min_per_day": 30,
+    "sedentary_hours_per_day": 8,
+    "rhr_bpm": 65,
+    "hrv_rmssd_ms": 45,
+    "sleep_duration_hours": 7.0,
+    "sleep_regularidad_SRI": 70,
+    "sleep_efficiency_percent": 88,
+    "whtr_ratio": 0.5
+  }
+}

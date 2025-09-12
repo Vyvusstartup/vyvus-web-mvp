@@ -1,0 +1,12 @@
+{
+  "vo2max_mlkgmin": 0.15,
+  "steps_per_day": 0.12,
+  "mvpa_min_per_day": 0.12,
+  "sedentary_hours_per_day": 0.08,
+  "rhr_bpm": 0.08,
+  "hrv_rmssd_ms": 0.1,
+  "sleep_duration_hours": 0.1,
+  "sleep_regularidad_SRI": 0.1,
+  "sleep_efficiency_percent": 0.07,
+  "whtr_ratio": 0.08
+}
