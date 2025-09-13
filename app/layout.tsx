@@ -2,6 +2,8 @@ import "./globals.css";
 import React from "react";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import LangSwitcher from "@/components/LangSwitcher";
+import LayoutTagline from "@/components/LayoutTagline";
+import LayoutFooter from "@/components/LayoutFooter";
 
 export const metadata = {
   title: "Vyvus — Longevity Score (DEMO)",
@@ -18,9 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold">Vyvus — Longevity Score (DEMO)</h1>
-                  <p className="text-sm text-neutral900/70">
-                    Educativo · No diagnóstico · Percentiles DEMO
-                  </p>
+                  <LayoutTagline />
                 </div>
                 <LangSwitcher />
               </div>
@@ -28,11 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {children}
 
-            <footer className="mt-16 text-xs text-neutral900/60">
-              <p>
-                © {new Date().getFullYear()} Vyvus — DEMO. Esta herramienta es educativa y no
-                brinda diagnóstico médico.
-              </p>
+            <footer>
+              <LayoutFooter />
             </footer>
           </div>
         </I18nProvider>
@@ -40,3 +37,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
