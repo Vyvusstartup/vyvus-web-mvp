@@ -101,9 +101,11 @@ export default function Explain({ score, subscores }: Props) {
       </div>
 
       {loading && (
-        <p className="text-sm text-gray-600">
-          {lang === "en" ? "Generating explanation…" : "Generando explicación…"}
-        </p>
+        <div className="animate-pulse space-y-2" aria-live="polite" aria-busy="true">
+          <div className="h-3 bg-neutral100 rounded w-3/4"></div>
+          <div className="h-3 bg-neutral100 rounded w-5/6"></div>
+          <div className="h-3 bg-neutral100 rounded w-2/3"></div>
+        </div>
       )}
 
       {!loading && data && (
