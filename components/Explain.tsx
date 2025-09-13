@@ -182,4 +182,3 @@ export default function Explain({ score, subscores }: Props) {
     </div>
   );
 }
-
