@@ -3,7 +3,7 @@
 **What it is.** Next.js web that computes a **0–100** score from **10 metrics** (Tier 1) and generates a simple, evidence-based explanation (non-diagnostic). PWA installable (iOS/Android).
 
 ## Demo
-- **URL:** <YOUR-VERCEL-URL>
+- **URL:** vyvus-web-mvp.vercel.app
 - **Try it:** Home → “Calculate my score” → enter 10 metrics or use **Demo profiles**
 - **Language:** ES/EN (switch in header)
 - **PWA:** Safari/Chrome → *Add to Home Screen / Install app*
