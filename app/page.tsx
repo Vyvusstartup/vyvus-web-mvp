@@ -28,7 +28,7 @@ export default function Home() {
           <Link href="/calcular" className="btn btn-primary">
             {tr(lang, "Calcular mi score", "Calculate my score")}
           </Link>
-          <Link href="/calcular" className="btn bg-neutral100">
+          <Link href="/calcular#demo" className="btn bg-neutral100">
             {tr(lang, "Ver perfiles demo", "View demo profiles")}
           </Link>
         </div>
