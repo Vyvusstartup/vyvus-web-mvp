@@ -18,10 +18,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* PWA */}
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#6366F1" />
+        <meta name="application-name" content="Vyvus" />
+        <meta name="mobile-web-app-capable" content="yes" />
 
         {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Vyvus" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body>
@@ -51,5 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 
 
