@@ -7,17 +7,20 @@ type Props = {
   subscores: Record<string, number>;
 };
 
+type Detail = {
+  name: string;
+  why: string;
+  guideline: string;
+  est_points: number;
+  refs?: Array<{ title: string; url?: string }>;
+};
+
 type ResponseData = {
   mode: "basic" | "advanced";
   lang: "es" | "en";
   intro: string;
   tips: string[];
-  details?: Array<{
-    name: string;
-    why: string;
-    guideline: string;
-    est_points: number;
-  }>;
+  details?: Detail[];
   sources?: Array<{ title: string; url?: string }>;
   disclaimer: string;
 };
@@ -55,6 +58,29 @@ export default function Explain({ score, subscores }: Props) {
     run();
     return () => ctrl.abort();
   }, [payload]);
+
+  // Mapa índice → fuente para superíndices [1], [2], ...
+  const sourceIndex = useMemo(() => {
+    const m = new Map<string, number>();
+    if (data?.sources) {
+      data.sources.forEach((s, i) => {
+        const key = (s.url || s.title || "").trim();
+        if (key) m.set(key, i + 1); // 1-based
+      });
+    }
+    return m;
+  }, [data]);
+
+  // Busca el primer índice de fuente que corresponda a un detalle
+  const firstRefIndex = (d: Detail) => {
+    if (!d.refs || !data?.sources) return undefined;
+    for (const r of d.refs) {
+      const key = (r.url || r.title || "").trim();
+      const idx = sourceIndex.get(key);
+      if (idx) return idx;
+    }
+    return undefined;
+  };
 
   return (
     <div className="mt-3 space-y-3">
@@ -101,35 +127,42 @@ export default function Explain({ score, subscores }: Props) {
                 {lang === "en" ? "Why and how" : "Por qué y cómo"}
               </h5>
               <ul className="space-y-2 text-sm">
-                {data.details.map((d, i) => (
-                  <li key={i}>
-                    <b>{d.name}:</b> {d.why} — {d.guideline}
-                    {d.est_points > 0 && (
-                      <>
-                        {" "}
-                        ({lang === "en" ? "est. +" : "est. +"}
-                        {d.est_points} {lang === "en" ? "pts" : "pts"})
-                      </>
-                    )}
-                  </li>
-                ))}
+                {data.details.map((d, i) => {
+                  const refIdx = firstRefIndex(d);
+                  return (
+                    <li key={i}>
+                      <b>{d.name}</b>
+                      {typeof refIdx === "number" && <sup>[{refIdx}]</sup>}
+                      {": "}
+                      {d.why} — {d.guideline}
+                      {d.est_points > 0 && (
+                        <> ({lang === "en" ? "est. +" : "est. +"}{d.est_points} {lang === "en" ? "pts" : "pts"})</>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
 
           {mode === "advanced" && data.sources && data.sources.length > 0 && (
-            <div className="space-y-1">
-              <h5 className="font-semibold">
-                {lang === "en" ? "Sources" : "Fuentes"}
-              </h5>
-              <ul className="list-disc ml-5 text-sm">
+            <details className="space-y-1">
+              <summary className="font-semibold cursor-pointer">
+                {lang === "en" ? "Sources" : "Fuentes"} ·{" "}
+                <span className="text-xs text-neutral-500">
+                  {lang === "en" ? "Evidence pack (demo)" : "Paquete de evidencia (demo)"} —{" "}
+                  {lang === "en" ? "Last reviewed: Sep 2025" : "Última revisión: sep 2025"}
+                </span>
+              </summary>
+              <ul className="list-disc ml-5 text-sm mt-2">
                 {data.sources.map((s, i) => (
                   <li key={i}>
+                    <span className="mr-1">[{i + 1}]</span>
                     {s.url ? (
                       <a
                         href={s.url}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer nofollow"
                         className="underline"
                       >
                         {s.title}
@@ -140,7 +173,7 @@ export default function Explain({ score, subscores }: Props) {
                   </li>
                 ))}
               </ul>
-            </div>
+            </details>
           )}
 
           <p className="text-xs text-neutral900/60">{data.disclaimer}</p>
@@ -149,3 +182,4 @@ export default function Explain({ score, subscores }: Props) {
     </div>
   );
 }
+
