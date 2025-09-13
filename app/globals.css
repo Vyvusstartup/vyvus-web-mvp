@@ -2,19 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Paleta de marca (puedes ajustar los hex mañana si cambias de logo) */
+:root{
+  --brand-50:#eef2ff; --brand-100:#e0e7ff; --brand-200:#c7d2fe;
+  --brand-300:#a5b4fc; --brand-400:#818cf8; --brand-500:#6366F1;
+  --brand-600:#4f46e5; --brand-700:#4338ca; --brand-800:#3730a3; --brand-900:#312e81;
+
   --radius: 16px;
 }
 
+/* Helpers para usar la marca aun si no está en tailwind.config */
+.bg-primary{ background: var(--brand-600); }
+.text-primary{ color: var(--brand-600); }
+
+/* Base UI */
 body { @apply bg-background text-neutral900; }
 .container { @apply max-w-3xl mx-auto px-4; }
 .card { @apply bg-surface rounded-2xl shadow p-6; }
+
 .btn { @apply rounded-2xl px-4 py-2 font-medium shadow; }
 .btn-primary { @apply bg-primary text-white hover:opacity-90; }
+/* Si prefieres hover por color en lugar de opacidad, descomenta la línea de abajo */
+/* .btn-primary:hover { background: var(--brand-700); } */
+
 .btn-disabled { @apply opacity-50 cursor-not-allowed; }
 .input { @apply w-full border rounded-xl px-3 py-2; }
 .label { @apply text-sm font-medium text-neutral900; }
 .help { @apply text-xs text-neutral900/70; }
+
 .badge { @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm; }
 .badge-green { @apply bg-green-100 text-green-800; }
 .badge-amber { @apply bg-yellow-100 text-yellow-800; }
