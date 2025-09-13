@@ -27,18 +27,43 @@ function tr(lang: "es" | "en", es: string, en: string) {
   return lang === "en" ? en : es;
 }
 
-// ---- NUEVO: traduce nombres de perfiles demo según idioma ----
+// ---- NUEVO: traduce nombres de perfiles demo según idioma (robusto) ----
 function displayProfileName(id: string, lang: "es" | "en") {
-  const key = id.replace("demo_", "");
+  // 1) normaliza: quita "demo_", pasa a minúsculas, elimina acentos, cambia separadores a "_"
+  const key = id
+    .toLowerCase()
+    .replace(/^demo_/, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // sin acentos
+    .replace(/[^a-z0-9]+/g, "_")                      // espacios, guiones → "_"
+    .replace(/^_|_$/g, "");                           // sin guiones bajos al inicio/fin
+
+  // 2) tabla que contempla variantes en ES y EN
   const map: Record<string, { es: string; en: string }> = {
-    athlete: { es: "Atleta", en: "Athlete" },
-    promedio: { es: "Promedio", en: "Average" },
-    sedentario: { es: "Sedentario", en: "Sedentary" },
-    sueno_irregular: { es: "Sueño irregular", en: "Irregular sleep" },
-    alto_whtr: { es: "Alto WHtR", en: "High WHtR" }
+    // atleta
+    "athlete": { es: "Atleta", en: "Athlete" },
+
+    // promedio / average
+    "promedio": { es: "Promedio", en: "Average" },
+    "average":  { es: "Promedio", en: "Average" },
+
+    // sedentario / sedentary
+    "sedentario": { es: "Sedentario", en: "Sedentary" },
+    "sedentary":  { es: "Sedentary",  en: "Sedentary" }, // en español mostramos "Sedentario"
+    
+    // sueño irregular / irregular sleep
+    "sueno_irregular":     { es: "Sueño irregular", en: "Irregular sleep" },
+    "irregular_sleep":     { es: "Sueño irregular", en: "Irregular sleep" },
+
+    // alto WHtR / high WHtR
+    "alto_whtr": { es: "Alto WHtR", en: "High WHtR" },
+    "high_whtr": { es: "Alto WHtR", en: "High WHtR" }
   };
-  return (map[key] ?? { es: key, en: key })[lang];
+
+  const entry = map[key];
+  // 3) fallback: si no mapea, muestra el key con espacios
+  return entry ? entry[lang] : key.replace(/_/g, " ");
 }
+
 
 export default function ScoreForm() {
   const { lang, t } = useI18n();
