@@ -2,7 +2,10 @@
 import React, { useMemo, useState } from "react";
 import { computeScore, type Metrics, type ScoreInput } from "@/lib/score";
 import { useI18n } from "@/i18n/I18nProvider";
-import Explain from "@/components/Explain"; // evidencia ES/EN
+import Explain from "@/components/Explain";
+
+// 🔎 evidencia (para tooltips “¿por qué?”)
+import evidenceList from "@/data/evidence/vyvus_tier1_evidence.json";
 
 const defaultInput: ScoreInput = {
   age_band: "30-39",
@@ -22,6 +25,12 @@ const defaultInput: ScoreInput = {
 };
 
 type DemoProfile = { profile_id: string; age_band: string; sex: "M" | "F"; metrics: Metrics };
+type Lang = "es" | "en";
+type EvidenceEntry = {
+  key: string;
+  name_es?: string; name_en?: string;
+  why_es?: string;  why_en?: string;
+};
 
 // helper mínimo para textos no incluidos en messages/*.json
 function tr(lang: "es" | "en", es: string, en: string) {
@@ -51,7 +60,7 @@ function displayProfileName(id: string, lang: "es" | "en") {
   return entry ? entry[lang] : key.replace(/_/g, " ");
 }
 
-// NUEVO — categoría por score (rango + badge)
+// Categoría por score (rango + badge)
 function categoryForScore(score: number, lang: "es" | "en") {
   if (score < 50) {
     return { label: tr(lang, "Bajo", "Low"), badgeCls: "bg-red-100 text-red-700" };
@@ -63,6 +72,27 @@ function categoryForScore(score: number, lang: "es" | "en") {
     return { label: tr(lang, "Adecuado", "Good"), badgeCls: "bg-green-100 text-green-700" };
   }
   return { label: tr(lang, "Óptimo", "Excellent"), badgeCls: "bg-blue-100 text-blue-700" };
+}
+
+// 🧠 evidencia → “por qué” por métrica (para tooltips)
+const EVIDENCE: Record<string, EvidenceEntry> =
+  Object.fromEntries((evidenceList as EvidenceEntry[]).map(e => [e.key, e]));
+const scoreKeyToEvidenceKey: Record<string, string> = {
+  vo2max_mlkgmin: "vo2max",
+  steps_per_day: "steps_day",
+  mvpa_min_per_day: "mvpa_min_day",
+  sedentary_hours_per_day: "sedentary_hours_day",
+  rhr_bpm: "rhr_bpm",
+  hrv_rmssd_ms: "hrv_rmssd",
+  sleep_duration_hours: "sleep_duration_hours",
+  sleep_regularidad_SRI: "sleep_regularidad_SRI",
+  sleep_efficiency_percent: "sleep_efficiency_pct",
+  whtr_ratio: "whtr"
+};
+function whyFor(metricKey: string, lang: Lang): string | undefined {
+  const ev = EVIDENCE[scoreKeyToEvidenceKey[metricKey]];
+  if (!ev) return;
+  return lang === "en" ? ev.why_en : ev.why_es;
 }
 
 export default function ScoreForm() {
@@ -245,7 +275,7 @@ export default function ScoreForm() {
           <ReliabilityBadge />
         </div>
 
-        {/* NUEVO — barra por categorías con gradiente */}
+        {/* Barra por categorías con gradiente */}
         <div>
           <div className="relative w-full bg-neutral100 rounded-xl h-4 overflow-hidden">
             <div
@@ -261,6 +291,13 @@ export default function ScoreForm() {
               {cat.label}
             </span>
           </div>
+
+          {/* 🔹 Leyenda discreta (XS) */}
+          <div className="text-xs text-gray-500 mt-1">
+            {lang === "en"
+              ? "0–49 Low · 50–69 Fair · 70–84 Good · 85–100 Excellent"
+              : "0–49 Bajo · 50–69 Moderado · 70–84 Adecuado · 85–100 Óptimo"}
+          </div>
         </div>
 
         <details className="mt-2">
@@ -268,7 +305,8 @@ export default function ScoreForm() {
           <ul className="grid grid-cols-2 gap-2 mt-2 text-sm">
             {Object.entries(output.subscores_0_100).map(([k, v]) => (
               <li key={k} className="flex justify-between">
-                <span>{labelFor(k, t)}</span>
+                {/* Tooltip con “por qué importa” (evidencia) */}
+                <span title={whyFor(k, lang) ?? undefined}>{labelFor(k, t)}</span>
                 <span>{Math.round(v)}</span>
               </li>
             ))}
