@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { computeScore, type Metrics, type ScoreInput } from "@/lib/score";
 import { useI18n } from "@/i18n/I18nProvider";
+import Explain from "@/components/Explain"; // 👈 NUEVO
 
 const defaultInput: ScoreInput = {
   age_band: "30-39",
@@ -27,43 +28,28 @@ function tr(lang: "es" | "en", es: string, en: string) {
   return lang === "en" ? en : es;
 }
 
-// ---- NUEVO: traduce nombres de perfiles demo según idioma (robusto) ----
+// Traducción robusta de nombres de perfiles demo (ES/EN)
 function displayProfileName(id: string, lang: "es" | "en") {
-  // 1) normaliza: quita "demo_", pasa a minúsculas, elimina acentos, cambia separadores a "_"
   const key = id
     .toLowerCase()
     .replace(/^demo_/, "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // sin acentos
-    .replace(/[^a-z0-9]+/g, "_")                      // espacios, guiones → "_"
-    .replace(/^_|_$/g, "");                           // sin guiones bajos al inicio/fin
-
-  // 2) tabla que contempla variantes en ES y EN
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
   const map: Record<string, { es: string; en: string }> = {
-    // atleta
-    "athlete": { es: "Atleta", en: "Athlete" },
-
-    // promedio / average
-    "promedio": { es: "Promedio", en: "Average" },
-    "average":  { es: "Promedio", en: "Average" },
-
-    // sedentario / sedentary
-    "sedentario": { es: "Sedentario", en: "Sedentary" },
-    "sedentary":  { es: "Sedentary",  en: "Sedentary" }, // en español mostramos "Sedentario"
-    
-    // sueño irregular / irregular sleep
-    "sueno_irregular":     { es: "Sueño irregular", en: "Irregular sleep" },
-    "irregular_sleep":     { es: "Sueño irregular", en: "Irregular sleep" },
-
-    // alto WHtR / high WHtR
-    "alto_whtr": { es: "Alto WHtR", en: "High WHtR" },
-    "high_whtr": { es: "Alto WHtR", en: "High WHtR" }
+    athlete: { es: "Atleta", en: "Athlete" },
+    promedio: { es: "Promedio", en: "Average" },
+    average: { es: "Promedio", en: "Average" },
+    sedentario: { es: "Sedentario", en: "Sedentary" },
+    sedentary: { es: "Sedentario", en: "Sedentary" },
+    sueno_irregular: { es: "Sueño irregular", en: "Irregular sleep" },
+    irregular_sleep: { es: "Sueño irregular", en: "Irregular sleep" },
+    alto_whtr: { es: "Alto WHtR", en: "High WHtR" },
+    high_whtr: { es: "Alto WHtR", en: "High WHtR" }
   };
-
   const entry = map[key];
-  // 3) fallback: si no mapea, muestra el key con espacios
   return entry ? entry[lang] : key.replace(/_/g, " ");
 }
-
 
 export default function ScoreForm() {
   const { lang, t } = useI18n();
@@ -265,16 +251,11 @@ export default function ScoreForm() {
           </ul>
         </details>
 
-        <div className="flex gap-2">
-          <button className="btn btn-disabled" disabled>
-            {tr(lang, "Conectar wearable (pronto)", "Connect wearable (soon)")}
-          </button>
-          <button className="btn btn-disabled" disabled>
-            {tr(lang, "Subir CSV (beta)", "Upload CSV (beta)")}
-          </button>
-        </div>
-
-        <Tips score={output.longevity_score_0_100} subscores={output.subscores_0_100} />
+        {/* 👇 NUEVO: explicación basada en evidencia (reemplaza Tips) */}
+        <Explain
+          score={output.longevity_score_0_100}
+          subscores={output.subscores_0_100}
+        />
       </div>
     </div>
   );
@@ -330,92 +311,5 @@ function labelFor(key: string, t: (k: string) => string) {
       return t("form.whtr");
     default:
       return key;
-  }
-}
-
-function Tips({
-  score,
-  subscores
-}: {
-  score: number;
-  subscores: Record<string, number>;
-}) {
-  const { lang, t } = useI18n(); // usamos el hook aquí para título traducido
-  const lows = Object.entries(subscores)
-    .sort((a, b) => a[1] - b[1])
-    .slice(0, 3)
-    .map(([k]) => k);
-  const suggestions = lows.map((k) => suggestFor(k, lang));
-  return (
-    <div className="mt-3">
-      <h4 className="font-semibold">{t("result.tips")}</h4>
-      <ul className="list-disc ml-5 text-sm">
-        {suggestions.map((s, i) => (
-          <li key={i}>{s}</li>
-        ))}
-      </ul>
-      <p className="help mt-2">
-        {tr(
-          lang,
-          "Sugerencias educativas basadas en métricas bajas. No sustituyen recomendaciones médicas.",
-          "Educational suggestions based on lower metrics. Not medical advice."
-        )}
-      </p>
-    </div>
-  );
-}
-
-function suggestFor(key: string, lang: "es" | "en") {
-  const S = (es: string, en: string) => (lang === "en" ? en : es);
-  switch (key) {
-    case "steps_per_day":
-      return S("Añadir ~2000 pasos/día caminando en 2–3 bloques.", "Add ~2,000 steps/day in 2–3 bouts.");
-    case "mvpa_min_per_day":
-      return S(
-        "Sumar 15–20 min de actividad moderada (p. ej., trotar o bici).",
-        "Add 15–20 min of moderate activity (e.g., jog or bike)."
-      );
-    case "sedentary_hours_per_day":
-      return S(
-        "Hacer pausas de 2–3 min cada hora para reducir sedentarismo.",
-        "Take 2–3 min movement breaks every hour to reduce sedentary time."
-      );
-    case "rhr_bpm":
-      return S(
-        "Practicar respiración/relajación y actividad aeróbica ligera para bajar RHR.",
-        "Practice breathing/relaxation and light aerobic activity to lower RHR."
-      );
-    case "hrv_rmssd_ms":
-      return S(
-        "Priorizar sueño regular y manejo del estrés para mejorar HRV.",
-        "Prioritize regular sleep and stress management to improve HRV."
-      );
-    case "sleep_duration_hours":
-      return S("Ajustar horario para acercarte a ~7–8 h de sueño.", "Adjust schedule toward ~7–8 h of sleep.");
-    case "sleep_regularidad_SRI":
-      return S(
-        "Fijar horarios consistentes de acostarse y levantarse.",
-        "Keep consistent bed and wake times."
-      );
-    case "sleep_efficiency_percent":
-      return S(
-        "Evitar pantallas antes de dormir y mantener el dormitorio oscuro.",
-        "Avoid screens before bed and keep the bedroom dark."
-      );
-    case "whtr_ratio":
-      return S(
-        "Apuntar a una relación cintura/estatura más baja con hábitos sostenibles.",
-        "Aim for a lower waist-to-height ratio with sustainable habits."
-      );
-    case "vo2max_mlkgmin":
-      return S(
-        "Incluir entrenamientos aeróbicos progresivos para subir VO₂max.",
-        "Include progressive aerobic training to raise VO₂max."
-      );
-    default:
-      return S(
-        "Hábitos consistentes y progresivos suelen mejorar el score.",
-        "Consistent, progressive habits typically improve the score."
-      );
   }
 }
