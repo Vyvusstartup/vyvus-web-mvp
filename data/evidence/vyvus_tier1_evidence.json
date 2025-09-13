@@ -1,0 +1,659 @@
+[
+  {
+    "key": "vo2max",
+    "name_es": "Capacidad aeróbica (VO₂max/aptitud cardiorrespiratoria)",
+    "name_en": "Cardiorespiratory fitness (VO₂max)",
+    "why_es": "Mayor aptitud cardiorrespiratoria se asocia de forma fuerte y consistente con menor mortalidad por todas las causas y cardiovascular.",
+    "why_en": "Higher cardiorespiratory fitness is a strong, consistent predictor of lower all-cause and cardiovascular mortality.",
+    "guideline_es": "Sin umbral oficial único; objetivo práctico: estar ≥ percentil por edad/sexo y mejorar progresivamente. AHA reconoce la aptitud como un ‘signo vital’.",
+    "guideline_en": "No single universal cutoff; practical target is at or above age/sex percentiles and progressive improvement. Recognized by AHA as a ‘vital sign’.",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 15,
+      "max": 75
+    },
+    "target_range": null,
+    "effect_size": "≈10–15% menor mortalidad por +1 MET en múltiples cohortes (rango)",
+    "measurement_notes": "Los wearables estiman VO₂max con modelos; precisión moderada frente a CPET, útil para tendencias. La validez varía por dispositivo y población.",
+    "actions_es": [
+      {
+        "text": "3×/sem 20–30 min a intensidad moderada–vigorosa",
+        "suggested_delta": 3,
+        "unit": "ses/sem"
+      },
+      {
+        "text": "Interválicos cortos (HIIT suave) 1–2×/sem",
+        "suggested_delta": 2,
+        "unit": "ses/sem"
+      },
+      {
+        "text": "Aumentar volumen semanal 10–20%",
+        "suggested_delta": 15,
+        "unit": "%/sem"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "3×/week 20–30 min moderate–vigorous cardio",
+        "suggested_delta": 3,
+        "unit": "sessions/week"
+      },
+      {
+        "text": "Add 1–2 short HIIT sessions/week",
+        "suggested_delta": 2,
+        "unit": "sessions/week"
+      },
+      {
+        "text": "Increase weekly volume by 10–20%",
+        "suggested_delta": 15,
+        "unit": "%/week"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Cardiorespiratory Fitness and Mortality Risk (Review)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/35550738/"
+      },
+      {
+        "title": "Consumer Wearable Health & Fitness Tech in Cardiovascular Medicine (JACC 2023)",
+        "url": "https://www.jacc.org/doi/10.1016/j.jacc.2023.04.054"
+      },
+      {
+        "title": "Assessing Apple Watch VO₂max vs. gold standard (JMIR Biomed Eng 2024)",
+        "url": "https://biomedeng.jmir.org/2024/1/e59459"
+      },
+      {
+        "title": "FRIEND Registry normative CRF percentiles (JAHA 2021)",
+        "url": "https://www.ahajournals.org/doi/10.1161/JAHA.121.022796"
+      }
+    ]
+  },
+  {
+    "key": "steps_day",
+    "name_es": "Pasos por día",
+    "name_en": "Daily steps",
+    "why_es": "Más pasos diarios se asocian con menor mortalidad, con relación dosis–respuesta y beneficios desde niveles bajos.",
+    "why_en": "Higher daily step counts show a dose–response association with lower mortality, with benefits starting from low levels.",
+    "guideline_es": "Sin guía oficial en pasos; meta práctica: aumentar respecto a tu línea base. Estudios muestran beneficios desde ~3.5–4k pasos/día y más allá.",
+    "guideline_en": "No official step guideline; practical target is to increase from baseline. Studies show benefits from ~3.5–4k steps/day and upward.",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 0,
+      "max": 25000
+    },
+    "target_range": null,
+    "effect_size": "≈12–15% menor riesgo de mortalidad por cada +1,000 pasos/día (síntesis 2023)",
+    "measurement_notes": "El conteo de pasos de wearables es generalmente fiable para caminar; puede variar por marca, muñeca y ritmo.",
+    "actions_es": [
+      {
+        "text": "+1,000 pasos repartidos en 2–3 caminatas",
+        "suggested_delta": 1000,
+        "unit": "pasos/día"
+      },
+      {
+        "text": "Subir escaleras 5–10 min/día",
+        "suggested_delta": 600,
+        "unit": "pasos/día"
+      },
+      {
+        "text": "Caminatas de 10–15 min tras comidas",
+        "suggested_delta": 800,
+        "unit": "pasos/día"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "+1,000 steps via 2–3 walks",
+        "suggested_delta": 1000,
+        "unit": "steps/day"
+      },
+      {
+        "text": "Take stairs 5–10 min/day",
+        "suggested_delta": 600,
+        "unit": "steps/day"
+      },
+      {
+        "text": "10–15 min post-meal walks",
+        "suggested_delta": 800,
+        "unit": "steps/day"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Daily steps & mortality (Eur J Prev Cardiol 2023)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/37555441/"
+      },
+      {
+        "title": "Journal Scan: Every +1,000 steps ≈ 12–15% lower mortality (JACC 2023)",
+        "url": "https://www.jacc.org/doi/10.1016/j.jacc.2023.07.029"
+      },
+      {
+        "title": "Umbrella review on steps and mortality (Public Health 2024)",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0091743524002020"
+      },
+      {
+        "title": "Wearables in cardiology overview (JACC 2023)",
+        "url": "https://www.jacc.org/doi/10.1016/j.jacc.2023.04.054"
+      }
+    ]
+  },
+  {
+    "key": "mvpa_min_day",
+    "name_es": "Actividad física moderada–vigorosa (MVPA)",
+    "name_en": "Moderate–vigorous physical activity (MVPA)",
+    "why_es": "Mayor MVPA se asocia con menor mortalidad y eventos cardiovasculares, con una clara relación dosis–respuesta.",
+    "why_en": "Higher MVPA associates with lower mortality and cardiovascular events in a clear dose–response pattern.",
+    "guideline_es": "OMS/AHA: 150–300 min/sem moderada o 75–150 min/sem vigorosa (o combinación).",
+    "guideline_en": "WHO/AHA: 150–300 min/week moderate or 75–150 min/week vigorous activity (or equivalent mix).",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 0,
+      "max": 180
+    },
+    "target_range": {
+      "min": 30,
+      "max": 60
+    },
+    "effect_size": "Meta-análisis acelerométricos: +1 DE de MVPA ≈ HR 0.7–0.9 (rango por estudio)",
+    "measurement_notes": "Wearables estiman MVPA con acelerometría/PPG; los umbrales de intensidad y algoritmos difieren entre marcas.",
+    "actions_es": [
+      {
+        "text": "+20 min/día de caminar rápido o bici",
+        "suggested_delta": 20,
+        "unit": "min/día"
+      },
+      {
+        "text": "2 sesiones/sem vigorosas cortas",
+        "suggested_delta": 10,
+        "unit": "min/día"
+      },
+      {
+        "text": "Bouts de 10–15 min tras comidas",
+        "suggested_delta": 15,
+        "unit": "min/día"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "+20 min/day brisk walk or cycling",
+        "suggested_delta": 20,
+        "unit": "min/day"
+      },
+      {
+        "text": "2 short vigorous sessions/week",
+        "suggested_delta": 10,
+        "unit": "min/day"
+      },
+      {
+        "text": "10–15 min bouts after meals",
+        "suggested_delta": 15,
+        "unit": "min/day"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Device-measured PA & mortality (harmonized meta-analysis 2024)",
+        "url": "https://bjsm.bmj.com/content/58/4/205"
+      },
+      {
+        "title": "Vigorous intermittent lifestyle PA and mortality (Nat Med 2022)",
+        "url": "https://www.nature.com/articles/s41591-022-02072-1"
+      },
+      {
+        "title": "WHO 2020 PA Guidelines",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/33239350/"
+      }
+    ]
+  },
+  {
+    "key": "sedentary_hours_day",
+    "name_es": "Horas sedentarias por día",
+    "name_en": "Sedentary time (hours/day)",
+    "why_es": "Más sedentarismo se asocia con mayor mortalidad; el riesgo se atenúa si se alcanza MVPA suficiente.",
+    "why_en": "Higher sedentary time links to higher mortality; risk is attenuated when sufficient MVPA is achieved.",
+    "guideline_es": "‘Sentarse menos, moverse más’. Romper periodos prolongados; combinar con MVPA.",
+    "guideline_en": "“Sit less, move more.” Break up long sitting bouts; combine with MVPA.",
+    "norm_shape": "monotonic_dec",
+    "plausible_range": {
+      "min": 0,
+      "max": 16
+    },
+    "target_range": null,
+    "effect_size": "Riesgo elevado con >8–9 h/día si MVPA baja; la MVPA moderada–alta mitiga el exceso de riesgo",
+    "measurement_notes": "Acelerómetros de wearable capturan sedentarismo razonablemente, pero varía por algoritmo y colocación.",
+    "actions_es": [
+      {
+        "text": "Pausas activas 2–3 min cada 30–60 min",
+        "suggested_delta": -1,
+        "unit": "h/día"
+      },
+      {
+        "text": "+30–40 min/día de caminata ligera",
+        "suggested_delta": -0.5,
+        "unit": "h/día"
+      },
+      {
+        "text": "Escritorio de pie 1–2 h/día",
+        "suggested_delta": -1,
+        "unit": "h/día"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Active breaks 2–3 min every 30–60 min",
+        "suggested_delta": -1,
+        "unit": "h/day"
+      },
+      {
+        "text": "+30–40 min/day light walking",
+        "suggested_delta": -0.5,
+        "unit": "h/day"
+      },
+      {
+        "text": "Use a sit–stand desk 1–2 h/day",
+        "suggested_delta": -1,
+        "unit": "h/day"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Joint associations of sedentary time and PA with mortality (IJBNPA 2024)",
+        "url": "https://ijbnpa.biomedcentral.com/articles/10.1186/s12966-024-01683-3"
+      },
+      {
+        "title": "WHO 2020 PA Guidelines (sedentary guidance)",
+        "url": "https://www.ncbi.nlm.nih.gov/books/NBK566046/"
+      }
+    ]
+  },
+  {
+    "key": "rhr_bpm",
+    "name_es": "Frecuencia cardíaca en reposo (FC reposo)",
+    "name_en": "Resting heart rate (RHR)",
+    "why_es": "RHR más alta se asocia con mayor mortalidad y eventos cardiovasculares en cohortes poblacionales.",
+    "why_en": "Higher RHR is associated with increased all-cause and cardiovascular mortality in population cohorts.",
+    "guideline_es": "No hay corte único; valores más bajos dentro del rango normal suelen ser mejores, considerando edad/medicación.",
+    "guideline_en": "No single cutoff; lower values within normal range are generally favorable, accounting for age/medications.",
+    "norm_shape": "monotonic_dec",
+    "plausible_range": {
+      "min": 40,
+      "max": 120
+    },
+    "target_range": null,
+    "effect_size": "≈+9% de mortalidad por cada +10 lpm (meta-análisis clásico; relación estable en cohortes)",
+    "measurement_notes": "RHR en wearables es precisa en reposo; artefactos con movimiento/temperatura. Medir en reposo real.",
+    "actions_es": [
+      {
+        "text": "+150 min/sem de cardio moderado",
+        "suggested_delta": -3,
+        "unit": "lpm"
+      },
+      {
+        "text": "Mejorar sueño/estrés (respiración/meditación)",
+        "suggested_delta": -2,
+        "unit": "lpm"
+      },
+      {
+        "text": "Evitar estimulantes tarde (cafeína/nicotina)",
+        "suggested_delta": -1,
+        "unit": "lpm"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "≥150 min/week moderate cardio",
+        "suggested_delta": -3,
+        "unit": "bpm"
+      },
+      {
+        "text": "Improve sleep/stress (breathing/meditation)",
+        "suggested_delta": -2,
+        "unit": "bpm"
+      },
+      {
+        "text": "Avoid late stimulants (caffeine/nicotine)",
+        "suggested_delta": -1,
+        "unit": "bpm"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Resting heart rate and mortality (CMAJ 2015)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25834166/"
+      },
+      {
+        "title": "Consumer wearables in cardiology (JACC 2023)",
+        "url": "https://www.jacc.org/doi/10.1016/j.jacc.2023.04.054"
+      }
+    ]
+  },
+  {
+    "key": "hrv_rmssd",
+    "name_es": "Variabilidad de la FC (RMSSD)",
+    "name_en": "Heart rate variability (RMSSD)",
+    "why_es": "HRV más baja (p. ej., RMSSD bajo) predice mayor mortalidad en análisis agregados y poblacionales.",
+    "why_en": "Lower HRV (e.g., low RMSSD) predicts higher mortality in pooled analyses and population cohorts.",
+    "guideline_es": "Sin umbrales universales; interpretar por edad/sexo y tendencia personal.",
+    "guideline_en": "No universal thresholds; interpret by age/sex and personal trend.",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 5,
+      "max": 200
+    },
+    "target_range": null,
+    "effect_size": "RMSSD en cuartil más bajo vs resto: HR ≈1.56 para mortalidad (meta‑análisis 2022)",
+    "measurement_notes": "PRV de wearables correlaciona con HRV; mejor medir en reposo nocturno. Comparar siempre en la misma condición.",
+    "actions_es": [
+      {
+        "text": "Rutina de sueño consistente (±30–60 min)",
+        "suggested_delta": 5,
+        "unit": "ms"
+      },
+      {
+        "text": "Respiración lenta 5–10 min/día",
+        "suggested_delta": 3,
+        "unit": "ms"
+      },
+      {
+        "text": "+150 min/sem de actividad física",
+        "suggested_delta": 2,
+        "unit": "ms"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Consistent sleep routine (±30–60 min)",
+        "suggested_delta": 5,
+        "unit": "ms"
+      },
+      {
+        "text": "Slow breathing 5–10 min/day",
+        "suggested_delta": 3,
+        "unit": "ms"
+      },
+      {
+        "text": "≥150 min/week physical activity",
+        "suggested_delta": 2,
+        "unit": "ms"
+      }
+    ],
+    "refs": [
+      {
+        "title": "HRV in the prediction of mortality (Meta-analysis 2022)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/36243195/"
+      },
+      {
+        "title": "Validity of Apple Watch HRV/RHR vs Polar H10 (Sensors 2024)",
+        "url": "https://www.mdpi.com/1424-8220/24/19/6220"
+      }
+    ]
+  },
+  {
+    "key": "sleep_duration_hours",
+    "name_es": "Duración de sueño (horas)",
+    "name_en": "Sleep duration (hours)",
+    "why_es": "Relación en U con mortalidad y eventos; ~7 horas suele asociarse con menor riesgo.",
+    "why_en": "U-shaped association with mortality and events; ~7 hours often linked to lowest risk.",
+    "guideline_es": "AASM/NSF: adultos deberían dormir ≥7 h/nocte de forma regular.",
+    "guideline_en": "AASM/NSF: adults should regularly obtain ≥7 h/night.",
+    "norm_shape": "u_shaped",
+    "plausible_range": {
+      "min": 3,
+      "max": 12
+    },
+    "target_range": {
+      "min": 7,
+      "max": 9
+    },
+    "effect_size": "Riesgo aumentado con <7 h y >8–9 h; mínimos ~7 h (cohortes 2023–2024)",
+    "measurement_notes": "Los wearables estiman duración con buena sensibilidad al sueño total, con sesgos en estadios.",
+    "actions_es": [
+      {
+        "text": "Ventana fija de sueño (7–9 h)",
+        "suggested_delta": 1,
+        "unit": "h/noche"
+      },
+      {
+        "text": "Rutina pre‑sueño 30–60 min sin pantallas",
+        "suggested_delta": 0.5,
+        "unit": "h/noche"
+      },
+      {
+        "text": "Luz solar matutina 10–20 min",
+        "suggested_delta": 0.2,
+        "unit": "h/noche"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Fixed sleep window (7–9 h)",
+        "suggested_delta": 1,
+        "unit": "h/night"
+      },
+      {
+        "text": "30–60 min wind‑down, screen‑free",
+        "suggested_delta": 0.5,
+        "unit": "h/night"
+      },
+      {
+        "text": "Morning light 10–20 min",
+        "suggested_delta": 0.2,
+        "unit": "h/night"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Objective sleep duration & mortality (JAMA Netw Open 2023)",
+        "url": "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2812565"
+      },
+      {
+        "title": "AASM statement (Adults ≥7 h/night) 2024",
+        "url": "https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/"
+      },
+      {
+        "title": "U-shaped associations in cohorts (Front Cardiovasc Med 2023)",
+        "url": "https://www.frontiersin.org/articles/10.3389/fcvm.2023.1109225/full"
+      }
+    ]
+  },
+  {
+    "key": "sleep_regularidad_SRI",
+    "name_es": "Regularidad de sueño (SRI)",
+    "name_en": "Sleep regularity (SRI)",
+    "why_es": "Mayor regularidad (SRI alto) se asocia con menor mortalidad total, cáncer y cardiometabólica.",
+    "why_en": "Greater regularity (higher SRI) predicts lower all-cause, cancer, and cardiometabolic mortality.",
+    "guideline_es": "Recomendado mantener horarios estables: despertar/acostarse dentro de ±30–60 min.",
+    "guideline_en": "Maintain consistent bed/wake times within ±30–60 minutes.",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 0,
+      "max": 100
+    },
+    "target_range": {
+      "min": 70,
+      "max": 100
+    },
+    "effect_size": "Mejor SRI asociado a menor mortalidad; efecto comparable o superior a duración (UK Biobank)",
+    "measurement_notes": "Wearables y actígrafos estiman SRI a partir de patrones de actividad/descanso; requiere varias semanas de datos.",
+    "actions_es": [
+      {
+        "text": "Hora fija de despertar (±30 min)",
+        "suggested_delta": 10,
+        "unit": "SRI"
+      },
+      {
+        "text": "Evitar jet‑lag social (fines de semana)",
+        "suggested_delta": 8,
+        "unit": "SRI"
+      },
+      {
+        "text": "Rutinas consistentes de luz/comidas",
+        "suggested_delta": 5,
+        "unit": "SRI"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Fixed wake time (±30 min)",
+        "suggested_delta": 10,
+        "unit": "SRI"
+      },
+      {
+        "text": "Avoid social jet lag (weekends)",
+        "suggested_delta": 8,
+        "unit": "SRI"
+      },
+      {
+        "text": "Consistent light/meal timing",
+        "suggested_delta": 5,
+        "unit": "SRI"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Sleep regularity vs mortality (SLEEP 2024)",
+        "url": "https://academic.oup.com/sleep/article/47/1/zsad253/7280269"
+      },
+      {
+        "title": "NSF 2023 Consensus on Sleep Regularity",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/37217772/"
+      }
+    ]
+  },
+  {
+    "key": "sleep_efficiency_pct",
+    "name_es": "Eficiencia de sueño (%)",
+    "name_en": "Sleep efficiency (%)",
+    "why_es": "Peor continuidad (baja eficiencia) se asocia con peor salud; objetivo común clínico ≥85%.",
+    "why_en": "Poor continuity (low efficiency) relates to worse health; a common clinical target is ≥85%.",
+    "guideline_es": "Objetivo práctico ≥85% (convención clínica/investigación; no umbral poblacional oficial).",
+    "guideline_en": "Practical target ≥85% (clinical/research convention; no universal population cutoff).",
+    "norm_shape": "monotonic_inc",
+    "plausible_range": {
+      "min": 60,
+      "max": 99
+    },
+    "target_range": {
+      "min": 85,
+      "max": 95
+    },
+    "effect_size": "Baja eficiencia se asocia con riesgos cardiometabólicos en cohortes; mejora con hábitos y tratamiento de trastornos.",
+    "measurement_notes": "Wearables estiman bien tiempo total; la eficiencia puede diferir vs PSG; usar tendencia multi‑noche.",
+    "actions_es": [
+      {
+        "text": "Higiene del sueño (ambiente, cafeína temprana)",
+        "suggested_delta": 5,
+        "unit": "pp"
+      },
+      {
+        "text": "Horario constante y luz matutina",
+        "suggested_delta": 3,
+        "unit": "pp"
+      },
+      {
+        "text": "Reducir siestas largas (>30 min)",
+        "suggested_delta": 2,
+        "unit": "pp"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Sleep hygiene (environment, earlier caffeine)",
+        "suggested_delta": 5,
+        "unit": "pp"
+      },
+      {
+        "text": "Consistent schedule & morning light",
+        "suggested_delta": 3,
+        "unit": "pp"
+      },
+      {
+        "text": "Shorten long naps (>30 min)",
+        "suggested_delta": 2,
+        "unit": "pp"
+      }
+    ],
+    "refs": [
+      {
+        "title": "Consumer devices vs PSG (JMIR 2023 multicenter)",
+        "url": "https://mhealth.jmir.org/2023/1/e50983"
+      },
+      {
+        "title": "Oura Gen3 validity vs PSG (Sleep Med 2024)",
+        "url": "https://www.sciencedirect.com/science/article/pii/S1389945724000200"
+      },
+      {
+        "title": "AASM sleep health position (2021; fundamentos de continuidad)",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8494094/"
+      }
+    ]
+  },
+  {
+    "key": "whtr",
+    "name_es": "Relación cintura/estatura (WHtR)",
+    "name_en": "Waist-to-height ratio (WHtR)",
+    "why_es": "La adiposidad central (WHtR alta) se asocia con mayor mortalidad y riesgo cardiometabólico; comunicable (‘mantén la cintura <½ de tu estatura’).",
+    "why_en": "Central adiposity (higher WHtR) is linked to greater mortality and cardiometabolic risk; easy to communicate (‘keep waist < half your height’).",
+    "guideline_es": "Mensaje poblacional: WHtR < 0.5 (adultos); considerar <0.6 como alto riesgo.",
+    "guideline_en": "Population message: WHtR < 0.5 (adults); ≥0.6 indicates high risk.",
+    "norm_shape": "monotonic_dec",
+    "plausible_range": {
+      "min": 0.3,
+      "max": 0.8
+    },
+    "target_range": {
+      "min": 0.0,
+      "max": 0.5
+    },
+    "effect_size": "Meta‑análisis 2023: mayor WHtR asociado con ↑ mortalidad; por +1 DE ≈ +16% (estimaciones en literatura reciente)",
+    "measurement_notes": "Medición manual con cinta; medir cintura al nivel umbilical tras exhalación suave; ingresar altura exacta.",
+    "actions_es": [
+      {
+        "text": "Déficit calórico sostenido 300–500 kcal/d",
+        "suggested_delta": -0.02,
+        "unit": "WHtR"
+      },
+      {
+        "text": "Entrenamiento de fuerza 2–3×/sem",
+        "suggested_delta": -0.01,
+        "unit": "WHtR"
+      },
+      {
+        "text": "Dormir 7–9 h y gestionar estrés",
+        "suggested_delta": -0.005,
+        "unit": "WHtR"
+      }
+    ],
+    "actions_en": [
+      {
+        "text": "Sustained 300–500 kcal/day deficit",
+        "suggested_delta": -0.02,
+        "unit": "WHtR"
+      },
+      {
+        "text": "Strength training 2–3×/week",
+        "suggested_delta": -0.01,
+        "unit": "WHtR"
+      },
+      {
+        "text": "7–9 h sleep & stress management",
+        "suggested_delta": -0.005,
+        "unit": "WHtR"
+      }
+    ],
+    "refs": [
+      {
+        "title": "WHtR and mortality (Int J Obes 2023, systematic review & meta-analysis)",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/37770574/"
+      },
+      {
+        "title": "Editorial on WHtR ‘keep your waist < half your height’ (Front Nutr 2023)",
+        "url": "https://www.frontiersin.org/articles/10.3389/fnut.2023.1277610/full"
+      },
+      {
+        "title": "Central fatness & mortality (BMJ 2020)",
+        "url": "https://www.bmj.com/content/370/bmj.m3324"
+      }
+    ]
+  }
+]
