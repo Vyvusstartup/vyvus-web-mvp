@@ -4,6 +4,7 @@ import { I18nProvider } from "@/i18n/I18nProvider";
 import LangSwitcher from "@/components/LangSwitcher";
 import LayoutTagline from "@/components/LayoutTagline";
 import LayoutFooter from "@/components/LayoutFooter";
+import RegisterSW from "@/components/RegisterSW";
 
 export const metadata = {
   title: "Vyvus — Longevity Score (DEMO)",
@@ -13,8 +14,21 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
+      <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#6366F1" />
+
+        {/* iOS PWA */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body>
         <I18nProvider>
+          {/* registra el Service Worker */}
+          <RegisterSW />
+
           <div className="container py-8">
             <header className="mb-8">
               <div className="flex items-start justify-between gap-4">
@@ -37,4 +51,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 
