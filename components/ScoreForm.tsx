@@ -27,6 +27,19 @@ function tr(lang: "es" | "en", es: string, en: string) {
   return lang === "en" ? en : es;
 }
 
+// ---- NUEVO: traduce nombres de perfiles demo según idioma ----
+function displayProfileName(id: string, lang: "es" | "en") {
+  const key = id.replace("demo_", "");
+  const map: Record<string, { es: string; en: string }> = {
+    athlete: { es: "Atleta", en: "Athlete" },
+    promedio: { es: "Promedio", en: "Average" },
+    sedentario: { es: "Sedentario", en: "Sedentary" },
+    sueno_irregular: { es: "Sueño irregular", en: "Irregular sleep" },
+    alto_whtr: { es: "Alto WHtR", en: "High WHtR" }
+  };
+  return (map[key] ?? { es: key, en: key })[lang];
+}
+
 export default function ScoreForm() {
   const { lang, t } = useI18n();
   const [tab, setTab] = useState<"manual" | "demo">("manual");
@@ -185,7 +198,7 @@ export default function ScoreForm() {
                   onClick={() => setInput({ age_band: p.age_band, sex: p.sex, metrics: p.metrics })}
                 >
                   <h4 className="font-semibold">
-                    {p.profile_id.replace("demo_", "").replace("_", " ")}
+                    {displayProfileName(p.profile_id, lang)}
                   </h4>
                   <p className="text-sm text-neutral900/70">
                     {p.sex} · {p.age_band}
@@ -236,7 +249,7 @@ export default function ScoreForm() {
           </button>
         </div>
 
-        <Tips lang={lang} score={output.longevity_score_0_100} subscores={output.subscores_0_100} />
+        <Tips score={output.longevity_score_0_100} subscores={output.subscores_0_100} />
       </div>
     </div>
   );
@@ -296,14 +309,13 @@ function labelFor(key: string, t: (k: string) => string) {
 }
 
 function Tips({
-  lang,
   score,
   subscores
 }: {
-  lang: "es" | "en";
   score: number;
   subscores: Record<string, number>;
 }) {
+  const { lang, t } = useI18n(); // usamos el hook aquí para título traducido
   const lows = Object.entries(subscores)
     .sort((a, b) => a[1] - b[1])
     .slice(0, 3)
@@ -311,13 +323,7 @@ function Tips({
   const suggestions = lows.map((k) => suggestFor(k, lang));
   return (
     <div className="mt-3">
-      <h4 className="font-semibold">
-        {/* usamos la clave existente en messages */}
-        {/* ES: "3 cosas que subirían tu score" / EN: "3 things to raise your score" */}
-        {/**/}
-        {/* si prefieres el texto original "3 cosas que podrías hacer", cámbialo por tr(lang, "...", "...") */}
-        {tr(lang, "3 cosas que podrías hacer", "3 things you could do")}
-      </h4>
+      <h4 className="font-semibold">{t("result.tips")}</h4>
       <ul className="list-disc ml-5 text-sm">
         {suggestions.map((s, i) => (
           <li key={i}>{s}</li>
