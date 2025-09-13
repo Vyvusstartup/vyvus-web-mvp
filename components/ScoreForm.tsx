@@ -103,6 +103,23 @@ export default function ScoreForm() {
 
   const output = useMemo(() => computeScore(input), [input]);
 
+  // 🚀 Cargar último input y abrir #demo si aplica
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("vyvus:lastInput:v1");
+      if (raw) setInput(JSON.parse(raw));
+    } catch {}
+    if (typeof window !== "undefined" && window.location.hash === "#demo") {
+      setTab("demo");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 💾 Guardar en localStorage cada cambio
+  React.useEffect(() => {
+    try { localStorage.setItem("vyvus:lastInput:v1", JSON.stringify(input)); } catch {}
+  }, [input]);
+
   async function loadProfiles() {
     const res = await fetch("/api/profiles");
     const data = await res.json();
@@ -245,7 +262,7 @@ export default function ScoreForm() {
 
       {/* Tab: Perfiles demo */}
       {tab === "demo" && (
-        <div className="card space-y-3">
+        <div className="card space-y-3" id="demo">
           {!profiles && <p>{tr(lang, "Cargando perfiles…", "Loading profiles…")}</p>}
           {profiles && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
