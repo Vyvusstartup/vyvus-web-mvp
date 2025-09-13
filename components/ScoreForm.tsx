@@ -103,7 +103,7 @@ export default function ScoreForm() {
 
   const output = useMemo(() => computeScore(input), [input]);
 
-  // 🚀 Cargar último input y abrir #demo si aplica
+  // 🚀 Cargar último input y abrir #demo si aplica (con scroll al bloque)
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem("vyvus:lastInput:v1");
@@ -111,6 +111,10 @@ export default function ScoreForm() {
     } catch {}
     if (typeof window !== "undefined" && window.location.hash === "#demo") {
       setTab("demo");
+      // esperar al re-render para que exista el nodo con id="demo"
+      setTimeout(() => {
+        document.getElementById("demo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -201,7 +205,7 @@ export default function ScoreForm() {
             </div>
           </div>
 
-          {/* Campos numéricos (labels traducidos con t(...)) */}
+          {/* Campos numéricos */}
           <div className="grid grid-cols-2 gap-4">
             <NumberField
               label={t("form.vo2max")}
