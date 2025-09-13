@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { computeScore, type Metrics, type ScoreInput } from "@/lib/score";
 import { useI18n } from "@/i18n/I18nProvider";
-import Explain from "@/components/Explain"; // 👈 NUEVO
+import Explain from "@/components/Explain"; // evidencia ES/EN
 
 const defaultInput: ScoreInput = {
   age_band: "30-39",
@@ -51,6 +51,20 @@ function displayProfileName(id: string, lang: "es" | "en") {
   return entry ? entry[lang] : key.replace(/_/g, " ");
 }
 
+// NUEVO — categoría por score (rango + badge)
+function categoryForScore(score: number, lang: "es" | "en") {
+  if (score < 50) {
+    return { label: tr(lang, "Bajo", "Low"), badgeCls: "bg-red-100 text-red-700" };
+  }
+  if (score < 70) {
+    return { label: tr(lang, "Moderado", "Fair"), badgeCls: "bg-amber-100 text-amber-700" };
+  }
+  if (score < 85) {
+    return { label: tr(lang, "Adecuado", "Good"), badgeCls: "bg-green-100 text-green-700" };
+  }
+  return { label: tr(lang, "Óptimo", "Excellent"), badgeCls: "bg-blue-100 text-blue-700" };
+}
+
 export default function ScoreForm() {
   const { lang, t } = useI18n();
   const [tab, setTab] = useState<"manual" | "demo">("manual");
@@ -85,6 +99,9 @@ export default function ScoreForm() {
         : tr(lang, "Insuficiente", "Insufficient");
     return <span className={"badge " + map[flag]}>{label}</span>;
   }
+
+  const score = output.longevity_score_0_100;
+  const cat = categoryForScore(score, lang);
 
   return (
     <div className="space-y-6">
@@ -227,16 +244,23 @@ export default function ScoreForm() {
           <h3 className="font-semibold">{t("result.title")}</h3>
           <ReliabilityBadge />
         </div>
+
+        {/* NUEVO — barra por categorías con gradiente */}
         <div>
-          <div className="w-full bg-neutral100 rounded-xl h-4 overflow-hidden">
+          <div className="relative w-full bg-neutral100 rounded-xl h-4 overflow-hidden">
             <div
-              className="bg-primary h-4"
-              style={{ width: `${output.longevity_score_0_100}%` }}
+              className="h-4 bg-gradient-to-r from-red-500 via-amber-400 via-green-500 to-blue-500"
+              style={{ width: `${score}%` }}
+              aria-label={tr(lang, "Progreso del score", "Score progress")}
             />
           </div>
-          <p className="text-sm mt-1">
-            <b>{output.longevity_score_0_100}/100</b>
-          </p>
+
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm font-semibold">{score}/100</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${cat.badgeCls}`}>
+              {cat.label}
+            </span>
+          </div>
         </div>
 
         <details className="mt-2">
@@ -251,11 +275,8 @@ export default function ScoreForm() {
           </ul>
         </details>
 
-        {/* 👇 NUEVO: explicación basada en evidencia (reemplaza Tips) */}
-        <Explain
-          score={output.longevity_score_0_100}
-          subscores={output.subscores_0_100}
-        />
+        {/* Explicación basada en evidencia */}
+        <Explain score={score} subscores={output.subscores_0_100} />
       </div>
     </div>
   );
