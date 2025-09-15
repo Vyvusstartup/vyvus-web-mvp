@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+      <rect width="256" height="256" fill="#0B1221"/>
+      
+        <defs>
+          <linearGradient id="gradOuter" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#3A86FF"/>
+            <stop offset="35%" stop-color="#00B894"/>
+            <stop offset="70%" stop-color="#F4EDE8"/>
+            <stop offset="100%" stop-color="#3A86FF"/>
+          </linearGradient>
+          <linearGradient id="gradInner" x1="256" y1="0" x2="0" y2="256" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00B894"/>
+            <stop offset="40%" stop-color="#3A86FF"/>
+            <stop offset="80%" stop-color="#F4EDE8"/>
+            <stop offset="100%" stop-color="#00B894"/>
+          </linearGradient>
+        </defs>
+        
+      <polygon points="200.746,86.000 200.746,170.000 128.000,212.000 55.254,170.000 55.254,86.000 128.000,44.000" fill="none" stroke="url(#gradOuter)" stroke-width="12" stroke-linejoin="round"/>
+      <polygon points="176.497,100.000 176.497,156.000 128.000,184.000 79.503,156.000 79.503,100.000 128.000,72.000" fill="none" stroke="url(#gradInner)" stroke-width="10" stroke-linejoin="round"/>
+      <circle cx="128" cy="128" r="9" fill="#00B894"/>
+    </svg>
