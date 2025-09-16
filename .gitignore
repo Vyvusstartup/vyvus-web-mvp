@@ -1,0 +1,19 @@
+﻿# dependencies
+node_modules/
+
+# build outputs
+.next/
+dist/
+out/
+.vercel/
+
+# env files
+.env
+.env.local
+.env.*.local
+
+# editor
+.vscode/
+
+# patches
+*.patch

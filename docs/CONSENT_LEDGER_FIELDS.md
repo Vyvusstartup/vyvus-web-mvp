@@ -1,0 +1,1 @@
+# Consent Ledger — Minimal Fields
