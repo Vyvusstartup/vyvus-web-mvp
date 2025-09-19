@@ -1,4 +1,4 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -7,17 +7,17 @@ export const runtime = "nodejs";
 
 type Metrics = {
   resting_hr_bpm?: number;
-  hrv_sdnn_ms?: number;
-  hrv_rmssd_ms?: number;
+  hrv_sdnn_ms?: number;   // Apple (disponible hoy)
+  hrv_rmssd_ms?: number;  // Oura/otros (opcional)
   vo2max_ml_kg_min?: number;
   steps_per_day?: number;
   mvpa_minutes_per_day?: number;
-  sedentary_hours_per_day?: number;   // self-report por ahora
+  sedentary_hours_per_day?: number;   // autorreporte por ahora
   sleep_duration_hours?: number;
   sleep_efficiency_percent?: number;
-  sleep_regularidad_SRI?: number;     // self-report por ahora
-  height_cm?: number;
-  waist_circumference_cm?: number;
+  sleep_regularidad_SRI?: number;     // autorreporte por ahora
+  height_cm?: number;                 // para WHTR
+  waist_circumference_cm?: number;    // para WHTR
   whtr_ratio?: number;                // calculado si hay height & waist
 };
 
@@ -26,13 +26,14 @@ type Payload = {
   date: string; // YYYY-MM-DD
   metrics: Metrics;
   meta?: Record<string, unknown>;
-  consent?: { version?: string; scopes?: string[]; };
+  consent?: { version?: string; scopes?: string[] };
 };
 
 function bad(msg: string, code = 400) {
   return NextResponse.json({ error: msg }, { status: code });
 }
 
+// Regex correcta (sin doble backslash)
 function isValidDateYYYYMMDD(s: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
   let body: Payload;
   try {
     let raw = await req.text();
-    if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1); // strip BOM
+    if (raw.length > 0 && raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1); // strip BOM
     body = JSON.parse(raw);
   } catch {
     return bad("invalid json");
@@ -63,10 +64,19 @@ export async function POST(req: NextRequest) {
 
   const m = body.metrics;
   const numericKeys: (keyof Metrics)[] = [
-    "resting_hr_bpm","hrv_sdnn_ms","hrv_rmssd_ms","vo2max_ml_kg_min",
-    "steps_per_day","mvpa_minutes_per_day","sedentary_hours_per_day",
-    "sleep_duration_hours","sleep_efficiency_percent","sleep_regularidad_SRI",
-    "height_cm","waist_circumference_cm","whtr_ratio"
+    "resting_hr_bpm",
+    "hrv_sdnn_ms",
+    "hrv_rmssd_ms",
+    "vo2max_ml_kg_min",
+    "steps_per_day",
+    "mvpa_minutes_per_day",
+    "sedentary_hours_per_day",
+    "sleep_duration_hours",
+    "sleep_efficiency_percent",
+    "sleep_regularidad_SRI",
+    "height_cm",
+    "waist_circumference_cm",
+    "whtr_ratio",
   ];
   for (const k of numericKeys) {
     const v = m[k];
@@ -84,9 +94,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ===== STORAGE MODE =====
-  // En Vercel el FS es solo lectura salvo /tmp.
-  // Si estamos en Vercel (process.env.VERCEL) -> usar /tmp.
-  // En local -> usar data/ingest/mock/...
+  // Vercel: FS de solo lectura salvo /tmp → usar /tmp si no hay DB.
+  // Local/dev: usar data/ingest/mock/...
   const isVercel = !!process.env.VERCEL;
   const baseDir = isVercel
     ? path.join("/tmp", "vyvus-ingest", body.user_id)
@@ -98,11 +107,16 @@ export async function POST(req: NextRequest) {
     const record = { ...body, saved_at: new Date().toISOString() };
     await writeFile(filename, JSON.stringify(record, null, 2), "utf8");
     return NextResponse.json(
-      { saved: true, storage: isVercel ? "tmp" : "file", path: isVercel ? filename : path.relative(process.cwd(), filename) },
-      { status: 201 }
+      {
+        saved: true,
+        storage: isVercel ? "tmp" : "file",
+        path: isVercel ? filename : path.relative(process.cwd(), filename),
+      },
+      { status: 201 },
     );
   } catch (e: any) {
     console.error("storage error", e?.message || e);
     return NextResponse.json({ error: "storage_unavailable", details: String(e?.message || e) }, { status: 500 });
   }
 }
+
