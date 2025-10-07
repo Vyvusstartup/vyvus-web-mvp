@@ -1,4 +1,4 @@
-﻿export const runtime = "nodejs";
+export const runtime = "nodejs";
 
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { sha256hex } from "@/lib/hashToken";
@@ -34,8 +34,14 @@ export async function POST(req: Request) {
     if (!m) {
       return new Response(JSON.stringify({ error: "Missing bearer token" }), { status: 401 });
     }
-    const token = m[1];
+    const token = m[1].trim();
     const tokenHash = sha256hex(token);
+
+    // === DEBUG: imprime el hash recibido y a qué Supabase apunta ===
+    console.log("INGEST_DEBUG_START", {
+      tokenHash,
+      supabaseUrl: process.env.SUPABASE_URL,
+    });
 
     // 1) Validate token
     const { data: tokens, error: tokErr } = await supabaseAdmin
@@ -44,9 +50,13 @@ export async function POST(req: Request) {
       .eq("token_hash", tokenHash)
       .limit(1);
 
+    // === DEBUG: cuántas filas se encontraron / error de DB ===
     if (tokErr) {
+      console.error("INGEST_DEBUG_DB_ERR", tokErr);
       return new Response(JSON.stringify({ error: "Auth error" }), { status: 401 });
     }
+    console.log("INGEST_DEBUG_TOKENS_FOUND", (tokens?.length ?? 0));
+
     const tok = (tokens && tokens[0]) || null;
     if (!tok || tok.revoked_at || (tok.expires_at && new Date(tok.expires_at) < new Date())) {
       return new Response(JSON.stringify({ error: "Invalid or expired token" }), { status: 401 });
@@ -58,6 +68,9 @@ export async function POST(req: Request) {
     const testerCode = body.tester_code || tok.tester_code || null;
     const mtr = body.metrics || {};
     const measuredDate = mtr.date || toDateOnlyISO(new Date());
+
+    // === DEBUG: fecha que se guardará ===
+    console.log("INGEST_DEBUG_MEASURED_DATE", measuredDate);
 
     // 3) Derived metrics
     let bmi: number | null = null;
@@ -98,6 +111,7 @@ export async function POST(req: Request) {
       .upsert(row, { onConflict: "user_id,measured_date" });
 
     if (upErr) {
+      console.error("INGEST_DEBUG_DB_WRITE_ERR", upErr);
       return new Response(JSON.stringify({ error: "DB write failed" }), { status: 500 });
     }
 
@@ -105,7 +119,8 @@ export async function POST(req: Request) {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  } catch {
+  } catch (e) {
+    console.error("INGEST_DEBUG_UNEXPECTED", e);
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
