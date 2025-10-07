@@ -37,12 +37,24 @@ export async function POST(req: Request) {
     const token = m[1].trim();
     const tokenHash = sha256hex(token).trim().toLowerCase();
 
-    // 1) Validate token (exact match)
-    const { data: tokens, error: tokErr } = await supabaseAdmin
+    // 1) Validate token (match exacto; si no, fallback por prefijo para tolerar espacios/uppercase)
+    let { data: tokens, error: tokErr } = await supabaseAdmin
       .from("ingest_tokens")
       .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
       .eq("token_hash", tokenHash)
       .limit(1);
+
+    if (!tokErr && (!tokens || tokens.length === 0)) {
+      const likePrefix = `${tokenHash}%`;
+      const res2 = await supabaseAdmin
+        .from("ingest_tokens")
+        .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
+        .like("token_hash", likePrefix)
+        .limit(1);
+      if (!res2.error && res2.data && res2.data.length > 0) {
+        tokens = res2.data;
+      }
+    }
 
     if (tokErr) {
       return new Response(JSON.stringify({ error: "Auth error" }), { status: 401 });
@@ -109,4 +121,3 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
-
