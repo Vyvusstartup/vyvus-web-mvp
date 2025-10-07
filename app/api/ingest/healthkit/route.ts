@@ -37,44 +37,16 @@ export async function POST(req: Request) {
     const token = m[1].trim();
     const tokenHash = sha256hex(token).trim().toLowerCase();
 
-    // DEBUG
-    console.log("INGEST_DEBUG_START", {
-      tokenHash,
-      supabaseUrl: process.env.SUPABASE_URL,
-    });
-
     // 1) Validate token (exact match)
-    let { data: tokens, error: tokErr } = await supabaseAdmin
+    const { data: tokens, error: tokErr } = await supabaseAdmin
       .from("ingest_tokens")
       .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
       .eq("token_hash", tokenHash)
       .limit(1);
 
-    // Fallback: tolerar posibles espacios basura o variaciones al pegar el hash en la DB
-    if (!tokErr && (!tokens || tokens.length === 0)) {
-      const likePrefix = `${tokenHash}%`;
-      const res2 = await supabaseAdmin
-        .from("ingest_tokens")
-        .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
-        .like("token_hash", likePrefix)
-        .limit(1);
-      if (res2.error) {
-        tokErr = res2.error;
-      } else if (res2.data && res2.data.length > 0) {
-        tokens = res2.data;
-        console.warn("INGEST_DEBUG_FALLBACK_LIKE_MATCH", {
-          stored: tokens[0].token_hash,
-          expected: tokenHash,
-        });
-      }
-    }
-
     if (tokErr) {
-      console.error("INGEST_DEBUG_DB_ERR", tokErr);
       return new Response(JSON.stringify({ error: "Auth error" }), { status: 401 });
     }
-    console.log("INGEST_DEBUG_TOKENS_FOUND", tokens?.length ?? 0);
-
     const tok = (tokens && tokens[0]) || null;
     if (!tok || tok.revoked_at || (tok.expires_at && new Date(tok.expires_at) < new Date())) {
       return new Response(JSON.stringify({ error: "Invalid or expired token" }), { status: 401 });
@@ -86,8 +58,6 @@ export async function POST(req: Request) {
     const testerCode = body.tester_code || tok.tester_code || null;
     const mtr = body.metrics || {};
     const measuredDate = mtr.date || toDateOnlyISO(new Date());
-
-    console.log("INGEST_DEBUG_MEASURED_DATE", measuredDate);
 
     // 3) Derived metrics
     let bmi: number | null = null;
@@ -128,7 +98,6 @@ export async function POST(req: Request) {
       .upsert(row, { onConflict: "user_id,measured_date" });
 
     if (upErr) {
-      console.error("INGEST_DEBUG_DB_WRITE_ERR", upErr);
       return new Response(JSON.stringify({ error: "DB write failed" }), { status: 500 });
     }
 
@@ -136,8 +105,8 @@ export async function POST(req: Request) {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  } catch (e) {
-    console.error("INGEST_DEBUG_UNEXPECTED", e);
+  } catch {
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
+
