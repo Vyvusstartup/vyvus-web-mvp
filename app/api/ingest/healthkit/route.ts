@@ -35,34 +35,39 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "Missing bearer token" }), { status: 401 });
     }
     const token = m[1].trim();
-    const tokenHash = sha256hex(token);
+    const tokenHash = sha256hex(token).trim().toLowerCase();
 
-    // === DEBUG: hash recibido y a qué Supabase apuntamos ===
+    // DEBUG
     console.log("INGEST_DEBUG_START", {
       tokenHash,
       supabaseUrl: process.env.SUPABASE_URL,
     });
 
-    // === DEBUG EXTRA: qué ve el server en ingest_tokens (primeras 5 filas) ===
-    const { data: sample, error: sampleErr } = await supabaseAdmin
+    // 1) Validate token (exact match)
+    let { data: tokens, error: tokErr } = await supabaseAdmin
       .from("ingest_tokens")
-      .select("token_hash")
-      .limit(5);
-    if (sampleErr) {
-      console.error("INGEST_DEBUG_SAMPLE_ERR", sampleErr);
-    } else {
-      console.log(
-        "INGEST_DEBUG_SAMPLE_HASHES",
-        (sample ?? []).map((r: any) => (r.token_hash || "").slice(0, 8))
-      );
-    }
-
-    // 1) Validate token
-    const { data: tokens, error: tokErr } = await supabaseAdmin
-      .from("ingest_tokens")
-      .select("id, user_id, tester_code, expires_at, revoked_at")
+      .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
       .eq("token_hash", tokenHash)
       .limit(1);
+
+    // Fallback: tolerar posibles espacios basura o variaciones al pegar el hash en la DB
+    if (!tokErr && (!tokens || tokens.length === 0)) {
+      const likePrefix = `${tokenHash}%`;
+      const res2 = await supabaseAdmin
+        .from("ingest_tokens")
+        .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
+        .like("token_hash", likePrefix)
+        .limit(1);
+      if (res2.error) {
+        tokErr = res2.error;
+      } else if (res2.data && res2.data.length > 0) {
+        tokens = res2.data;
+        console.warn("INGEST_DEBUG_FALLBACK_LIKE_MATCH", {
+          stored: tokens[0].token_hash,
+          expected: tokenHash,
+        });
+      }
+    }
 
     if (tokErr) {
       console.error("INGEST_DEBUG_DB_ERR", tokErr);
@@ -136,4 +141,3 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
-
