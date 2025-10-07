@@ -37,11 +37,25 @@ export async function POST(req: Request) {
     const token = m[1].trim();
     const tokenHash = sha256hex(token);
 
-    // === DEBUG: imprime el hash recibido y a qué Supabase apunta ===
+    // === DEBUG: hash recibido y a qué Supabase apuntamos ===
     console.log("INGEST_DEBUG_START", {
       tokenHash,
       supabaseUrl: process.env.SUPABASE_URL,
     });
+
+    // === DEBUG EXTRA: qué ve el server en ingest_tokens (primeras 5 filas) ===
+    const { data: sample, error: sampleErr } = await supabaseAdmin
+      .from("ingest_tokens")
+      .select("token_hash")
+      .limit(5);
+    if (sampleErr) {
+      console.error("INGEST_DEBUG_SAMPLE_ERR", sampleErr);
+    } else {
+      console.log(
+        "INGEST_DEBUG_SAMPLE_HASHES",
+        (sample ?? []).map((r: any) => (r.token_hash || "").slice(0, 8))
+      );
+    }
 
     // 1) Validate token
     const { data: tokens, error: tokErr } = await supabaseAdmin
@@ -50,12 +64,11 @@ export async function POST(req: Request) {
       .eq("token_hash", tokenHash)
       .limit(1);
 
-    // === DEBUG: cuántas filas se encontraron / error de DB ===
     if (tokErr) {
       console.error("INGEST_DEBUG_DB_ERR", tokErr);
       return new Response(JSON.stringify({ error: "Auth error" }), { status: 401 });
     }
-    console.log("INGEST_DEBUG_TOKENS_FOUND", (tokens?.length ?? 0));
+    console.log("INGEST_DEBUG_TOKENS_FOUND", tokens?.length ?? 0);
 
     const tok = (tokens && tokens[0]) || null;
     if (!tok || tok.revoked_at || (tok.expires_at && new Date(tok.expires_at) < new Date())) {
@@ -69,7 +82,6 @@ export async function POST(req: Request) {
     const mtr = body.metrics || {};
     const measuredDate = mtr.date || toDateOnlyISO(new Date());
 
-    // === DEBUG: fecha que se guardará ===
     console.log("INGEST_DEBUG_MEASURED_DATE", measuredDate);
 
     // 3) Derived metrics
@@ -124,3 +136,4 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
+
