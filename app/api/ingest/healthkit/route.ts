@@ -37,24 +37,12 @@ export async function POST(req: Request) {
     const token = m[1].trim();
     const tokenHash = sha256hex(token).trim().toLowerCase();
 
-    // 1) Validate token (match exacto; si no, fallback por prefijo para tolerar espacios/uppercase)
-    let { data: tokens, error: tokErr } = await supabaseAdmin
+    // 1) Validación EXACTA del hash en DB
+    const { data: tokens, error: tokErr } = await supabaseAdmin
       .from("ingest_tokens")
-      .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
+      .select("id, user_id, tester_code, expires_at, revoked_at")
       .eq("token_hash", tokenHash)
       .limit(1);
-
-    if (!tokErr && (!tokens || tokens.length === 0)) {
-      const likePrefix = `${tokenHash}%`;
-      const res2 = await supabaseAdmin
-        .from("ingest_tokens")
-        .select("id, user_id, tester_code, expires_at, revoked_at, token_hash")
-        .like("token_hash", likePrefix)
-        .limit(1);
-      if (!res2.error && res2.data && res2.data.length > 0) {
-        tokens = res2.data;
-      }
-    }
 
     if (tokErr) {
       return new Response(JSON.stringify({ error: "Auth error" }), { status: 401 });
@@ -64,14 +52,14 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "Invalid or expired token" }), { status: 401 });
     }
 
-    // 2) Parse body
+    // 2) Parseo de body
     const body = (await req.json()) as InBody;
     const src = body.source || "apple_watch";
     const testerCode = body.tester_code || tok.tester_code || null;
     const mtr = body.metrics || {};
     const measuredDate = mtr.date || toDateOnlyISO(new Date());
 
-    // 3) Derived metrics
+    // 3) Derivadas
     let bmi: number | null = null;
     let whtr: number | null = null;
     if (typeof mtr.weight_kg === "number" && typeof mtr.height_cm === "number" && mtr.height_cm > 0) {
@@ -121,3 +109,4 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Unexpected error" }), { status: 500 });
   }
 }
+
