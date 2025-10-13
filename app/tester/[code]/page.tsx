@@ -62,7 +62,8 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
 }
 
 // ===== Server Action: Recalcular y guardar =====
-async function recalcAndSave(prevState: any, formData: FormData) {
+// ⚠️ Firma correcta para <form action={fn}>
+async function recalcAndSave(formData: FormData) {
   "use server";
 
   const code = String(formData.get("code") || "");
@@ -78,12 +79,11 @@ async function recalcAndSave(prevState: any, formData: FormData) {
   const base =
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
-  const res = await fetch(`${base}/api/score/save`, {
+  await fetch(`${base}/api/score/save`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      // token solo en servidor (NUNCA en el cliente)
-      authorization: `Bearer ${process.env.INGEST_TEST_TOKEN ?? ""}`,
+      authorization: `Bearer ${process.env.INGEST_TEST_TOKEN ?? ""}`, // solo en servidor
     },
     body: JSON.stringify({ measured_date: date, user_id: userId }),
   });
@@ -115,7 +115,6 @@ export default async function TesterPage({ params, searchParams }: Props) {
     const canon = await readCanonicalMetrics(userId, date);
     if (canon) {
       computed = await computeScoreOnServer(
-        // @ts-ignore
         `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(code)}?date=${date}`,
         canon
       );
@@ -131,7 +130,9 @@ export default async function TesterPage({ params, searchParams }: Props) {
   return (
     <main className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
-      <p className="text-gray-500 mt-1">DEMO without population calibration or integrations. Educational content. Not medical advice.</p>
+      <p className="text-gray-500 mt-1">
+        DEMO without population calibration or integrations. Educational content. Not medical advice.
+      </p>
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Tester {code}</h2>
@@ -149,10 +150,7 @@ export default async function TesterPage({ params, searchParams }: Props) {
           <form action={recalcAndSave} className="mt-4">
             <input type="hidden" name="code" value={code} />
             <input type="hidden" name="date" value={date} />
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl border hover:bg-gray-50"
-            >
+            <button type="submit" className="px-4 py-2 rounded-xl border hover:bg-gray-50">
               Recalcular y guardar
             </button>
           </form>
@@ -174,10 +172,6 @@ export default async function TesterPage({ params, searchParams }: Props) {
             ))}
           </div>
 
-          <div className="mt-5 text-xs text-gray-500">
-            * “computed” = calculado al vuelo (no guardado). “cached” = leído de <code>daily_scores</code>.
-          </div>
-
           {/* Botón Recalcular (server action) */}
           <form action={recalcAndSave} className="mt-6">
             <input type="hidden" name="code" value={code} />
@@ -190,6 +184,10 @@ export default async function TesterPage({ params, searchParams }: Props) {
               Recalcular y guardar
             </button>
           </form>
+
+          <div className="mt-5 text-xs text-gray-500">
+            * “computed” = calculado al vuelo (no guardado). “cached” = leído de <code>daily_scores</code>.
+          </div>
         </div>
       )}
     </main>
