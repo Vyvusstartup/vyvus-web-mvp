@@ -1,7 +1,8 @@
 // app/tester/[code]/page.tsx
 import supabaseAdmin from "@/lib/supabaseAdmin";
+import { redirect } from "next/navigation";
 
-export const revalidate = 0; // siempre fresco (pilot)
+export const revalidate = 0; // siempre fresco en piloto
 
 type Props = {
   params: { code: string };
@@ -60,6 +61,37 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
   };
 }
 
+// ===== Server Action: Recalcular y guardar =====
+async function recalcAndSave(prevState: any, formData: FormData) {
+  "use server";
+
+  const code = String(formData.get("code") || "");
+  const date = String(formData.get("date") || new Date().toISOString().slice(0, 10));
+
+  // 1) obtener user_id de ese tester
+  const userId = await getUserIdByTesterCode(code);
+  if (!userId) {
+    redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
+  }
+
+  // 2) llamar al endpoint interno /api/score/save con token desde el servidor
+  const base =
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+
+  const res = await fetch(`${base}/api/score/save`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      // token solo en servidor (NUNCA en el cliente)
+      authorization: `Bearer ${process.env.INGEST_TEST_TOKEN ?? ""}`,
+    },
+    body: JSON.stringify({ measured_date: date, user_id: userId }),
+  });
+
+  // 3) volver a la misma página (mostrará source: cached)
+  redirect(`/tester/${encodeURIComponent(code)}?date=${date}`);
+}
+
 export default async function TesterPage({ params, searchParams }: Props) {
   const code = decodeURIComponent(params.code);
   const date = (searchParams?.date && String(searchParams.date)) || new Date().toISOString().slice(0, 10);
@@ -84,7 +116,7 @@ export default async function TesterPage({ params, searchParams }: Props) {
     if (canon) {
       computed = await computeScoreOnServer(
         // @ts-ignore
-        `https://` + process.env.VERCEL_URL + `/tester/${encodeURIComponent(code)}?date=${date}`,
+        `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(code)}?date=${date}`,
         canon
       );
     }
@@ -93,13 +125,18 @@ export default async function TesterPage({ params, searchParams }: Props) {
   const payload = cached
     ? { source: "cached" as const, date, ...cached }
     : computed
-      ? { source: "computed" as const, date, ...computed }
-      : null;
+    ? { source: "computed" as const, date, ...computed }
+    : null;
 
   return (
     <main className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold">Tester {code}</h1>
-      <p className="text-sm text-gray-500">Fecha: {date}</p>
+      <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
+      <p className="text-gray-500 mt-1">DEMO without population calibration or integrations. Educational content. Not medical advice.</p>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold">Tester {code}</h2>
+        <p className="text-sm text-gray-500">Fecha: {date}</p>
+      </div>
 
       {!payload ? (
         <div className="mt-6 rounded-2xl border p-4">
@@ -107,10 +144,25 @@ export default async function TesterPage({ params, searchParams }: Props) {
           <p className="text-sm text-gray-500 mt-1">
             Sube datos con el atajo o usa <code>/api/ingest/healthkit</code> y vuelve a intentar.
           </p>
+
+          {/* Botón de recalcular por si llega data justo ahora */}
+          <form action={recalcAndSave} className="mt-4">
+            <input type="hidden" name="code" value={code} />
+            <input type="hidden" name="date" value={date} />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl border hover:bg-gray-50"
+            >
+              Recalcular y guardar
+            </button>
+          </form>
         </div>
       ) : (
         <div className="mt-6 rounded-2xl border p-4">
-          <div className="text-4xl font-bold">{Math.round(payload.score)}<span className="text-xl">/100</span></div>
+          <div className="text-4xl font-bold">
+            {Math.round(payload.score)}
+            <span className="text-xl">/100</span>
+          </div>
           <div className="mt-1 text-sm text-gray-500">source: {payload.source}</div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
@@ -125,6 +177,19 @@ export default async function TesterPage({ params, searchParams }: Props) {
           <div className="mt-5 text-xs text-gray-500">
             * “computed” = calculado al vuelo (no guardado). “cached” = leído de <code>daily_scores</code>.
           </div>
+
+          {/* Botón Recalcular (server action) */}
+          <form action={recalcAndSave} className="mt-6">
+            <input type="hidden" name="code" value={code} />
+            <input type="hidden" name="date" value={date} />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl border hover:bg-gray-50"
+              title="Recalcular score con los datos de esta fecha y guardarlo"
+            >
+              Recalcular y guardar
+            </button>
+          </form>
         </div>
       )}
     </main>
