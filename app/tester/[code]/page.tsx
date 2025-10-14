@@ -1,6 +1,7 @@
 // app/tester/[code]/page.tsx
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { redirect } from "next/navigation";
+import RecalcButton from "../RecalcButton"; // ⟵ botón con estado "Recalculando…"
 
 export const revalidate = 0; // siempre fresco en piloto
 
@@ -62,33 +63,30 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
 }
 
 // ===== Server Action: Recalcular y guardar =====
-// ⚠️ Firma correcta para <form action={fn}>
 async function recalcAndSave(formData: FormData) {
   "use server";
 
   const code = String(formData.get("code") || "");
   const date = String(formData.get("date") || new Date().toISOString().slice(0, 10));
 
-  // 1) obtener user_id de ese tester
+  // 1) obtener user_id
   const userId = await getUserIdByTesterCode(code);
   if (!userId) {
     redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
   }
 
-  // 2) llamar al endpoint interno /api/score/save con token desde el servidor
-  const base =
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-
+  // 2) llamar /api/score/save desde el servidor (no se expone el token)
+  const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
   await fetch(`${base}/api/score/save`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${process.env.INGEST_TEST_TOKEN ?? ""}`, // solo en servidor
+      authorization: `Bearer ${process.env.INGEST_TEST_TOKEN ?? ""}`,
     },
     body: JSON.stringify({ measured_date: date, user_id: userId }),
   });
 
-  // 3) volver a la misma página (mostrará source: cached)
+  // 3) regresar a la misma página
   redirect(`/tester/${encodeURIComponent(code)}?date=${date}`);
 }
 
@@ -101,7 +99,9 @@ export default async function TesterPage({ params, searchParams }: Props) {
     return (
       <main className="max-w-xl mx-auto p-6">
         <h1 className="text-2xl font-semibold">Tester {code}</h1>
-        <p className="mt-3 text-red-600">No se encontró <code>user_id</code> para este <code>tester_code</code>.</p>
+        <p className="mt-3 text-red-600">
+          No se encontró <code>user_id</code> para este <code>tester_code</code>.
+        </p>
       </main>
     );
   }
@@ -109,7 +109,7 @@ export default async function TesterPage({ params, searchParams }: Props) {
   // 1) intenta caché
   const cached = await getCachedScore(userId, date);
 
-  // 2) si no hay caché, intenta calcular al vuelo leyendo métricas canónicas
+  // 2) si no hay caché, calcula al vuelo
   let computed: { score: number; subscores: Record<string, number | null> } | null = null;
   if (!cached) {
     const canon = await readCanonicalMetrics(userId, date);
@@ -146,13 +146,11 @@ export default async function TesterPage({ params, searchParams }: Props) {
             Sube datos con el atajo o usa <code>/api/ingest/healthkit</code> y vuelve a intentar.
           </p>
 
-          {/* Botón de recalcular por si llega data justo ahora */}
-          <form action={recalcAndSave} className="mt-4">
+          {/* Botón de recalcular */}
+          <form action={recalcAndSave} method="post" className="mt-4">
             <input type="hidden" name="code" value={code} />
             <input type="hidden" name="date" value={date} />
-            <button type="submit" className="px-4 py-2 rounded-xl border hover:bg-gray-50">
-              Recalcular y guardar
-            </button>
+            <RecalcButton />
           </form>
         </div>
       ) : (
@@ -173,16 +171,10 @@ export default async function TesterPage({ params, searchParams }: Props) {
           </div>
 
           {/* Botón Recalcular (server action) */}
-          <form action={recalcAndSave} className="mt-6">
+          <form action={recalcAndSave} method="post" className="mt-6">
             <input type="hidden" name="code" value={code} />
             <input type="hidden" name="date" value={date} />
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl border hover:bg-gray-50"
-              title="Recalcular score con los datos de esta fecha y guardarlo"
-            >
-              Recalcular y guardar
-            </button>
+            <RecalcButton />
           </form>
 
           <div className="mt-5 text-xs text-gray-500">
