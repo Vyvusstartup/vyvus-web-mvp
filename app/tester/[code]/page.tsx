@@ -1,7 +1,8 @@
 // app/tester/[code]/page.tsx
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { redirect } from "next/navigation";
-import RecalcButton from "../RecalcButton"; // ⟵ botón con estado "Recalculando…"
+import RecalcButton from "../RecalcButton";
+import DateNav from "../DateNav";
 
 export const revalidate = 0; // siempre fresco en piloto
 
@@ -75,7 +76,7 @@ async function recalcAndSave(formData: FormData) {
     redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
   }
 
-  // 2) llamar /api/score/save desde el servidor (no se expone el token)
+  // 2) llamar /api/score/save desde el servidor
   const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
   await fetch(`${base}/api/score/save`, {
     method: "POST",
@@ -137,6 +138,8 @@ export default async function TesterPage({ params, searchParams }: Props) {
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Tester {code}</h2>
         <p className="text-sm text-gray-500">Fecha: {date}</p>
+        {/* Selector de fecha */}
+        <DateNav date={date} />
       </div>
 
       {!payload ? (
