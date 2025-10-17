@@ -4,12 +4,9 @@ import { redirect } from "next/navigation";
 import RecalcButton from "../RecalcButton";
 import DateNav from "../DateNav";
 
-export const revalidate = 0; // siempre fresco en piloto
+export const revalidate = 0;
 
-type Props = {
-  params: { code: string };
-  searchParams?: { date?: string };
-};
+type Props = { params: { code: string }; searchParams?: { date?: string } };
 
 async function getUserIdByTesterCode(code: string) {
   const { data, error } = await supabaseAdmin
@@ -66,17 +63,11 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
 // ===== Server Action: Recalcular y guardar =====
 async function recalcAndSave(formData: FormData) {
   "use server";
-
   const code = String(formData.get("code") || "");
   const date = String(formData.get("date") || new Date().toISOString().slice(0, 10));
-
-  // 1) obtener user_id
   const userId = await getUserIdByTesterCode(code);
-  if (!userId) {
-    redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
-  }
+  if (!userId) redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
 
-  // 2) llamar /api/score/save desde el servidor
   const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
   await fetch(`${base}/api/score/save`, {
     method: "POST",
@@ -87,40 +78,38 @@ async function recalcAndSave(formData: FormData) {
     body: JSON.stringify({ measured_date: date, user_id: userId }),
   });
 
-  // 3) regresar a la misma página
   redirect(`/tester/${encodeURIComponent(code)}?date=${date}`);
 }
 
 export default async function TesterPage({ params, searchParams }: Props) {
   const code = decodeURIComponent(params.code);
   const date = (searchParams?.date && String(searchParams.date)) || new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
   const userId = await getUserIdByTesterCode(code);
   if (!userId) {
     return (
       <main className="max-w-xl mx-auto p-6">
         <h1 className="text-2xl font-semibold">Tester {code}</h1>
-        <p className="mt-3 text-red-600">
-          No se encontró <code>user_id</code> para este <code>tester_code</code>.
-        </p>
+        <p className="mt-3 text-red-600">No se encontró <code>user_id</code> para este <code>tester_code</code>.</p>
       </main>
     );
   }
 
-  // 1) intenta caché
+  // 1) Caché
   const cached = await getCachedScore(userId, date);
-
-  // 2) si no hay caché, calcula al vuelo
+  // 2) Canónico (para saber si hay datos) y, si no hay caché, calcular al vuelo
+  const canon = await readCanonicalMetrics(userId, date);
   let computed: { score: number; subscores: Record<string, number | null> } | null = null;
-  if (!cached) {
-    const canon = await readCanonicalMetrics(userId, date);
-    if (canon) {
-      computed = await computeScoreOnServer(
-        `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(code)}?date=${date}`,
-        canon
-      );
-    }
+  if (!cached && canon) {
+    computed = await computeScoreOnServer(
+      `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(code)}?date=${date}`,
+      canon
+    );
   }
+
+  const hasMetrics = !!canon;                             // ¿hay datos base ese día?
+  const canRecalc = date === today || hasMetrics;        // permitir hoy o días pasados con datos
 
   const payload = cached
     ? { source: "cached" as const, date, ...cached }
@@ -138,22 +127,21 @@ export default async function TesterPage({ params, searchParams }: Props) {
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Tester {code}</h2>
         <p className="text-sm text-gray-500">Fecha: {date}</p>
-        {/* Selector de fecha */}
         <DateNav date={date} />
       </div>
 
       {!payload ? (
         <div className="mt-6 rounded-2xl border p-4">
           <p className="text-gray-700">No hay métricas para esta fecha.</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Sube datos con el atajo o usa <code>/api/ingest/healthkit</code> y vuelve a intentar.
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Sube datos y vuelve a intentar.</p>
 
-          {/* Botón de recalcular */}
           <form action={recalcAndSave} method="post" className="mt-4">
             <input type="hidden" name="code" value={code} />
             <input type="hidden" name="date" value={date} />
-            <RecalcButton />
+            <RecalcButton
+              disabled={!canRecalc}
+              label={canRecalc ? "Calcular y guardar" : "Sin datos para recalcular"}
+            />
           </form>
         </div>
       ) : (
@@ -173,11 +161,13 @@ export default async function TesterPage({ params, searchParams }: Props) {
             ))}
           </div>
 
-          {/* Botón Recalcular (server action) */}
           <form action={recalcAndSave} method="post" className="mt-6">
             <input type="hidden" name="code" value={code} />
             <input type="hidden" name="date" value={date} />
-            <RecalcButton />
+            <RecalcButton
+              disabled={!canRecalc}
+              label={canRecalc ? "Recalcular y guardar" : "Sin datos para recalcular"}
+            />
           </form>
 
           <div className="mt-5 text-xs text-gray-500">
