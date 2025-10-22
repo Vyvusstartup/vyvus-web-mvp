@@ -3,11 +3,11 @@ import supabaseAdmin from "@/lib/supabaseAdmin";
 import { redirect } from "next/navigation";
 import RecalcButton from "../RecalcButton";
 import DateNav from "../DateNav";
+import Sparkline from "../Sparkline";
 
 export const revalidate = 0;
 
 type Props = { params: { code: string }; searchParams?: { date?: string } };
-
 type Subscores = Record<string, number | null>;
 
 function coverageFromCanon(canon: Record<string, any> | null): number | null {
@@ -16,6 +16,12 @@ function coverageFromCanon(canon: Record<string, any> | null): number | null {
   const present = vals.filter(v => v !== null && v !== undefined).length;
   const total = vals.length || 10;
   return Math.round((present / total) * 100);
+}
+
+function startDate(endYMD: string, days: number) {
+  const d = new Date(`${endYMD}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - (days - 1));
+  return d.toISOString().slice(0, 10);
 }
 
 async function getUserIdByTesterCode(code: string) {
@@ -70,6 +76,19 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
   };
 }
 
+async function getScoreSeries(userId: string, endDate: string, days = 30) {
+  const from = startDate(endDate, days);
+  const { data } = await supabaseAdmin
+    .from("daily_scores")
+    .select("measured_date, score")
+    .eq("user_id", userId)
+    .gte("measured_date", from)
+    .lte("measured_date", endDate)
+    .order("measured_date", { ascending: true });
+  // devolvemos un punto por día existente (si falta un día, se omite)
+  return (data ?? []).map(r => ({ date: r.measured_date as string, value: r.score as number | null }));
+}
+
 // ===== Server Action: Recalcular y guardar =====
 async function recalcAndSave(formData: FormData) {
   "use server";
@@ -106,8 +125,11 @@ export default async function TesterPage({ params, searchParams }: Props) {
     );
   }
 
-  const cached = await getCachedScore(userId, date);
-  const canon = await readCanonicalMetrics(userId, date);
+  const [cached, canon, series] = await Promise.all([
+    getCachedScore(userId, date),
+    readCanonicalMetrics(userId, date),
+    getScoreSeries(userId, date, 30),
+  ]);
 
   let computed:
     | { score: number; subscores: Subscores; reliability_flag: string | null }
@@ -167,32 +189,40 @@ export default async function TesterPage({ params, searchParams }: Props) {
         </div>
       ) : (
         <div className="mt-6 rounded-2xl border p-4">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl font-bold">
-              {Math.round(payload.score)}<span className="text-xl">/100</span>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-4xl font-bold">
+                {Math.round(payload.score)}<span className="text-xl">/100</span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full px-2 py-1 border">{payload.mode}</span>
+                {payload.coverage_percent != null && (
+                  <span className="rounded-full px-2 py-1 border">cobertura: {payload.coverage_percent}%</span>
+                )}
+                {payload.reliability_flag && (
+                  <span
+                    className={`rounded-full px-2 py-1 border ${
+                      payload.reliability_flag === "green"
+                        ? "border-green-500 text-green-600"
+                        : payload.reliability_flag === "yellow" || payload.reliability_flag === "amber"
+                        ? "border-yellow-500 text-yellow-600"
+                        : "border-red-500 text-red-600"
+                    }`}
+                  >
+                    {payload.reliability_flag}
+                  </span>
+                )}
+              </div>
+              {payload.last_saved_at && (
+                <div className="mt-1 text-xs text-gray-500">
+                  last_saved_at: {new Date(payload.last_saved_at).toISOString()}
+                </div>
+              )}
             </div>
-            <span className="text-xs rounded-full px-2 py-1 border">
-              {payload.mode}
-            </span>
-            {payload.coverage_percent != null && (
-              <span className="text-xs rounded-full px-2 py-1 border">
-                cobertura: {payload.coverage_percent}%
-              </span>
-            )}
-            {payload.reliability_flag && (
-              <span className={`text-xs rounded-full px-2 py-1 border ${
-                payload.reliability_flag === "green" ? "border-green-500 text-green-600"
-                : payload.reliability_flag === "yellow" ? "border-yellow-500 text-yellow-600"
-                : "border-red-500 text-red-600"
-              }`}>
-                {payload.reliability_flag}
-              </span>
-            )}
-          </div>
 
-          {payload.last_saved_at && (
-            <div className="mt-1 text-xs text-gray-500">last_saved_at: {new Date(payload.last_saved_at).toISOString()}</div>
-          )}
+            {/* Sparkline 30 días */}
+            <Sparkline data={series} />
+          </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
             {Object.entries(payload.subscores).map(([k, v]) => (
