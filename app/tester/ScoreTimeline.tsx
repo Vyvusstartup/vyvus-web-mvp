@@ -13,6 +13,12 @@ import { useMemo, useState } from 'react';
 
 type Pt = { date: string; value: number | null };
 
+// fuerza a número (evita NaN)
+function toNum(x: unknown, fallback = 0) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export default function ScoreTimeline({
   data,
   windowDays = 30,
@@ -32,14 +38,16 @@ export default function ScoreTimeline({
     [data]
   );
 
-  const [range, setRange] = useState(() => {
-    const n = points.length;
-    const end = Math.max(0, n - 1);
-    const start = Math.max(0, n - windowDays);
-    return { startIndex: start, endIndex: end };
-  });
+  const [range, setRange] = useState<{ startIndex: number; endIndex: number }>(
+    () => {
+      const n = points.length;
+      const end = Math.max(0, n - 1);
+      const start = Math.max(0, n - windowDays);
+      return { startIndex: start, endIndex: end };
+    }
+  );
 
-  const [activeIndex, setActiveIndex] = useState(() =>
+  const [activeIndex, setActiveIndex] = useState<number>(() =>
     Math.max(0, points.length - 1)
   );
 
@@ -65,13 +73,15 @@ export default function ScoreTimeline({
         )}
       </div>
 
+      {/* Gráfico principal */}
       <div className="h-28 w-full">
         <ResponsiveContainer>
           <LineChart
             data={view}
-            onMouseMove={(e) => {
+            onMouseMove={(e: any) => {
               if (e && e.activeTooltipIndex != null) {
-                const idx = range.startIndex + e.activeTooltipIndex;
+                const rel = toNum(e.activeTooltipIndex, 0);
+                const idx = range.startIndex + rel;
                 setActiveIndex(idx);
                 const p = points[idx];
                 if (p && onPick) onPick(p);
@@ -90,6 +100,7 @@ export default function ScoreTimeline({
         </ResponsiveContainer>
       </div>
 
+      {/* Brush para desplazar/zoom del rango */}
       <div className="h-8 w-full">
         <ResponsiveContainer>
           <LineChart data={points}>
@@ -99,9 +110,11 @@ export default function ScoreTimeline({
               endIndex={range.endIndex}
               onChange={(r: any) => {
                 if (!r) return;
-                setRange({ startIndex: r.startIndex, endIndex: r.endIndex });
-                setActiveIndex(r.endIndex);
-                const p = points[r.endIndex];
+                const start = toNum(r.startIndex, 0);
+                const end = toNum(r.endIndex, points.length - 1);
+                setRange({ startIndex: start, endIndex: end });
+                setActiveIndex(end);
+                const p = points[end];
                 if (p && onPick) onPick(p);
               }}
               travellerWidth={10}
