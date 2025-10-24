@@ -67,7 +67,6 @@ export default function ScorePanel({
       <div className="w-full">
         <ScoreTimeline
           data={points}
-          windowDays={30}
           onPick={(p) => {
             const i = rows.findIndex((r) => r.date === p.date);
             if (i >= 0) setActiveIndex(i);
