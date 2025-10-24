@@ -1,131 +1,141 @@
+// app/tester/ScoreTimeline.tsx
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceDot,
   ResponsiveContainer,
-  Brush,
 } from 'recharts';
-import { useMemo, useState } from 'react';
 
 type Pt = { date: string; value: number | null };
 
-// fuerza a número (evita NaN)
-function toNum(x: unknown, fallback = 0) {
+// fuerza número seguro
+function toNum(x: unknown, fb = 0) {
   const n = Number(x);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) ? n : fb;
 }
 
 export default function ScoreTimeline({
   data,
-  windowDays = 30,
   onPick,
   className = '',
 }: {
   data: Pt[];
-  windowDays?: number;
-  onPick?: (p: { date: string; score: number }) => void;
+  onPick?: (p: { date: string; score: number | null }) => void;
   className?: string;
 }) {
+  // normalizo a {date, score}
   const points = useMemo(
-    () =>
-      (data ?? [])
-        .filter((d) => d.value != null)
-        .map((d) => ({ date: d.date, score: Math.round(Number(d.value)) })),
+    () => data.map(d => ({ date: d.date, score: d.value == null ? null : toNum(d.value) })),
     [data]
   );
 
-  const [range, setRange] = useState<{ startIndex: number; endIndex: number }>(
-    () => {
-      const n = points.length;
-      const end = Math.max(0, n - 1);
-      const start = Math.max(0, n - windowDays);
-      return { startIndex: start, endIndex: end };
+  // índice por defecto: último punto con score
+  const defaultIdx = useMemo(() => {
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (points[i]?.score != null) return i;
     }
-  );
+    return Math.max(points.length - 1, 0);
+  }, [points]);
 
-  const [activeIndex, setActiveIndex] = useState<number>(() =>
-    Math.max(0, points.length - 1)
-  );
+  const [idx, setIdx] = useState(defaultIdx);
 
-  const view = points.slice(range.startIndex, range.endIndex + 1);
-  const active =
-    points.length === 0
-      ? null
-      : points[Math.min(activeIndex, points.length - 1)];
+  // si cambia la ventana de datos, re-sincroniza índice al final
+  useEffect(() => setIdx(defaultIdx), [defaultIdx]);
+
+  // notifica selección al padre
+  useEffect(() => {
+    if (!onPick) return;
+    const p = points[idx];
+    if (p) onPick({ date: p.date, score: p.score ?? null });
+  }, [idx, onPick, points]);
+
+  // dominio Y con padding
+  const yDomain = useMemo(() => {
+    const vals = points.map(p => p.score).filter((v): v is number => v != null);
+    if (!vals.length) return [0, 100] as [number, number];
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const pad = Math.max(2, (max - min) * 0.1);
+    return [min - pad, max + pad] as [number, number];
+  }, [points]);
+
+  // ticks del eje X: ~6 marcas
+  const xTicks = useMemo(() => {
+    if (points.length <= 1) return points.map(p => p.date);
+    const step = Math.ceil(points.length / 6);
+    const arr: string[] = [];
+    for (let i = 0; i < points.length; i += step) arr.push(points[i].date);
+    if (arr[arr.length - 1] !== points[points.length - 1].date) {
+      arr.push(points[points.length - 1].date);
+    }
+    return arr;
+  }, [points]);
 
   return (
-    <div className={`w-full ${className}`}>
-      <div className="flex items-baseline justify-end gap-2 mb-1">
-        {active ? (
-          <>
-            <div className="text-2xl font-semibold">
-              {active.score}
-              <span className="text-sm">/100</span>
-            </div>
-            <div className="text-xs text-gray-500">{active.date}</div>
-          </>
-        ) : (
-          <div className="text-xs text-gray-500">sin datos suficientes</div>
-        )}
-      </div>
-
-      {/* Gráfico principal */}
-      <div className="h-28 w-full">
-        <ResponsiveContainer>
+    <div className={className}>
+      {/* Gráfico estático con un punto que se mueve */}
+      <div className="h-36 sm:h-40 md:h-44">
+        <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={view}
-            onMouseMove={(e: any) => {
-              if (e && e.activeTooltipIndex != null) {
-                const rel = toNum(e.activeTooltipIndex, 0);
-                const idx = range.startIndex + rel;
-                setActiveIndex(idx);
-                const p = points[idx];
-                if (p && onPick) onPick(p);
+            data={points}
+            onClick={(e: any) => {
+              if (e && typeof e.activeTooltipIndex === 'number') {
+                setIdx(e.activeTooltipIndex);
               }
             }}
           >
-            <XAxis dataKey="date" hide />
-            <YAxis hide domain={['auto', 'auto']} />
-            <Tooltip
-              isAnimationActive={false}
-              formatter={(v) => [`${v as number}/100`, 'score']}
-              labelFormatter={(l) => l as string}
-            />
-            <Line type="monotone" dataKey="score" dot={false} strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Brush para desplazar/zoom del rango */}
-      <div className="h-8 w-full">
-        <ResponsiveContainer>
-          <LineChart data={points}>
-            <Brush
+            <XAxis
               dataKey="date"
-              startIndex={range.startIndex}
-              endIndex={range.endIndex}
-              onChange={(r: any) => {
-                if (!r) return;
-                const start = toNum(r.startIndex, 0);
-                const end = toNum(r.endIndex, points.length - 1);
-                setRange({ startIndex: start, endIndex: end });
-                setActiveIndex(end);
-                const p = points[end];
-                if (p && onPick) onPick(p);
-              }}
-              travellerWidth={10}
-              height={24}
+              ticks={xTicks}              // solo algunas fechas
+              interval={0}
+              tickFormatter={(d: string) => d.slice(5)} // MM-DD
+              axisLine={false}
+              tickLine={false}
+              stroke="#9ca3af"
+              fontSize={12}
             />
+            <YAxis hide domain={yDomain} />
+            <Tooltip contentStyle={{ display: 'none' }} />
+            <Line
+              type="monotone"
+              dataKey="score"
+              stroke="#1f7bb6"
+              strokeWidth={3}
+              dot={false}
+              isAnimationActive={false}
+            />
+            {points[idx] && points[idx].score != null && (
+              <ReferenceDot
+                x={points[idx].date}
+                y={points[idx].score!}
+                r={5}
+                fill="#1f7bb6"
+                stroke="#ffffff"
+                strokeWidth={2}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="text-[10px] text-gray-500 text-right mt-1">
-        últimos {windowDays} días (ajustable)
+      {/* Scrubber de UNA sola manija */}
+      <input
+        type="range"
+        min={0}
+        max={Math.max(points.length - 1, 0)}
+        value={idx}
+        onChange={e => setIdx(Number(e.target.value))}
+        className="w-full mt-2 accent-gray-700"
+      />
+
+      <div className="text-right text-xs text-gray-500 mt-1">
+        últimos {points.length} días (ajustable)
       </div>
     </div>
   );
