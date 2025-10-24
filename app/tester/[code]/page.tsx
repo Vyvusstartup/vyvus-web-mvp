@@ -3,8 +3,7 @@ import supabaseAdmin from "@/lib/supabaseAdmin";
 import { redirect } from "next/navigation";
 import RecalcButton from "../RecalcButton";
 import DateNav from "../DateNav";
-// ⬇️ Nuevo: timeline interactivo con Recharts
-import ScoreTimeline from "../ScoreTimeline";
+import ScorePanel from "../ScorePanel";
 
 export const revalidate = 0;
 
@@ -14,7 +13,7 @@ type Subscores = Record<string, number | null>;
 function coverageFromCanon(canon: Record<string, any> | null): number | null {
   if (!canon) return null;
   const vals = Object.values(canon);
-  const present = vals.filter(v => v !== null && v !== undefined).length;
+  const present = vals.filter((v) => v !== null && v !== undefined).length;
   const total = vals.length || 10;
   return Math.round((present / total) * 100);
 }
@@ -38,12 +37,20 @@ async function getUserIdByTesterCode(code: string) {
 async function getCachedScore(userId: string, date: string) {
   const { data } = await supabaseAdmin
     .from("daily_scores")
-    .select("score, subscores, last_saved_at, reliability_flag, coverage_percent")
+    .select(
+      "score, subscores, last_saved_at, reliability_flag, coverage_percent"
+    )
     .eq("user_id", userId)
     .eq("measured_date", date)
     .limit(1);
   return (data?.[0] ?? null) as
-    | { score: number; subscores: Subscores; last_saved_at: string; reliability_flag: string | null; coverage_percent: number | null }
+    | {
+        score: number;
+        subscores: Subscores;
+        last_saved_at: string;
+        reliability_flag: string | null;
+        coverage_percent: number | null;
+      }
     | null;
 }
 
@@ -77,28 +84,42 @@ async function computeScoreOnServer(reqUrl: string, metrics: any) {
   };
 }
 
-async function getScoreSeries(userId: string, endDate: string, days = 30) {
+// Serie detallada (score + subscores + meta) para 120 días
+async function getScoreRows(userId: string, endDate: string, days = 120) {
   const from = startDate(endDate, days);
   const { data } = await supabaseAdmin
     .from("daily_scores")
-    .select("measured_date, score")
+    .select(
+      "measured_date, score, subscores, reliability_flag, coverage_percent, last_saved_at"
+    )
     .eq("user_id", userId)
     .gte("measured_date", from)
     .lte("measured_date", endDate)
     .order("measured_date", { ascending: true });
-  // devolvemos un punto por día existente (si falta un día, se omite)
-  return (data ?? []).map(r => ({ date: r.measured_date as string, value: r.score as number | null }));
+  return (data ?? []).map((r) => ({
+    date: r.measured_date as string,
+    score: (r.score as number) ?? null,
+    subscores: (r.subscores as Subscores) ?? {},
+    reliability_flag: (r.reliability_flag as string) ?? null,
+    coverage_percent: (r.coverage_percent as number) ?? null,
+    last_saved_at: (r.last_saved_at as string) ?? null,
+  }));
 }
 
 // ===== Server Action: Recalcular y guardar =====
 async function recalcAndSave(formData: FormData) {
   "use server";
   const code = String(formData.get("code") || "");
-  const date = String(formData.get("date") || new Date().toISOString().slice(0, 10));
+  const date = String(
+    formData.get("date") || new Date().toISOString().slice(0, 10)
+  );
   const userId = await getUserIdByTesterCode(code);
-  if (!userId) redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
+  if (!userId)
+    redirect(`/tester/${encodeURIComponent(code)}?date=${date}&err=no_user`);
 
-  const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
   await fetch(`${base}/api/score/save`, {
     method: "POST",
     headers: {
@@ -113,7 +134,9 @@ async function recalcAndSave(formData: FormData) {
 
 export default async function TesterPage({ params, searchParams }: Props) {
   const code = decodeURIComponent(params.code);
-  const date = (searchParams?.date && String(searchParams.date)) || new Date().toISOString().slice(0, 10);
+  const date =
+    (searchParams?.date && String(searchParams.date)) ||
+    new Date().toISOString().slice(0, 10);
   const today = new Date().toISOString().slice(0, 10);
 
   const userId = await getUserIdByTesterCode(code);
@@ -121,16 +144,17 @@ export default async function TesterPage({ params, searchParams }: Props) {
     return (
       <main className="max-w-xl mx-auto p-6">
         <h1 className="text-2xl font-semibold">Tester {code}</h1>
-        <p className="mt-3 text-red-600">No se encontró <code>user_id</code> para este <code>tester_code</code>.</p>
+        <p className="mt-3 text-red-600">
+          No se encontró <code>user_id</code> para este <code>tester_code</code>.
+        </p>
       </main>
     );
   }
 
-  const [cached, canon, series] = await Promise.all([
+  const [cached, canon, rows] = await Promise.all([
     getCachedScore(userId, date),
     readCanonicalMetrics(userId, date),
-    // ⬇️ Más historial para el timeline
-    getScoreSeries(userId, date, 120),
+    getScoreRows(userId, date, 120),
   ]);
 
   let computed:
@@ -138,7 +162,9 @@ export default async function TesterPage({ params, searchParams }: Props) {
     | null = null;
   if (!cached && canon) {
     computed = await computeScoreOnServer(
-      `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(code)}?date=${date}`,
+      `https://${process.env.VERCEL_URL ?? "localhost:3000"}/tester/${encodeURIComponent(
+        code
+      )}?date=${date}`,
       canon
     );
   }
@@ -169,10 +195,65 @@ export default async function TesterPage({ params, searchParams }: Props) {
         }
       : null;
 
+  // puntos simples para la línea
+  const points = rows.map((r) => ({ date: r.date, value: r.score }));
+
+  // si no hay datos en ningún lado
+  if (!payload && rows.length === 0) {
+    return (
+      <main className="max-w-xl mx-auto p-6">
+        <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
+        <p className="text-gray-500 mt-1">
+          DEMO without population calibration or integrations. Educational content. Not medical advice.
+        </p>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold">Tester {code}</h2>
+          <p className="text-sm text-gray-500">Fecha: {date}</p>
+          <DateNav date={date} />
+        </div>
+
+        <div className="mt-6 rounded-2xl border p-4">
+          <p className="text-gray-700">No hay métricas para esta fecha.</p>
+          <form action={recalcAndSave} method="post" className="mt-4">
+            <input type="hidden" name="code" value={code} />
+            <input type="hidden" name="date" value={date} />
+            <RecalcButton
+              disabled={!canRecalc}
+              label={canRecalc ? "Calcular y guardar" : "Sin datos para recalcular"}
+            />
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  // inicial para el panel (si no hay payload, usamos la última fila disponible)
+  const initial =
+    payload
+      ? {
+          date,
+          score: payload.score,
+          subscores: payload.subscores,
+          reliability_flag: payload.reliability_flag ?? null,
+          coverage_percent: payload.coverage_percent ?? null,
+          last_saved_at: payload.last_saved_at ?? undefined,
+        }
+      : {
+          date: rows[rows.length - 1].date,
+          score: rows[rows.length - 1].score ?? 0,
+          subscores: rows[rows.length - 1].subscores ?? {},
+          reliability_flag: rows[rows.length - 1].reliability_flag ?? null,
+          coverage_percent: rows[rows.length - 1].coverage_percent ?? null,
+          last_saved_at: rows[rows.length - 1].last_saved_at ?? undefined,
+        };
+
   return (
     <main className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
-      <p className="text-gray-500 mt-1">DEMO without population calibration or integrations. Educational content. Not medical advice.</p>
+      <p className="text-gray-500 mt-1">
+        DEMO without population calibration or integrations. Educational content. Not medical advice.
+      </p>
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold">Tester {code}</h2>
@@ -180,75 +261,22 @@ export default async function TesterPage({ params, searchParams }: Props) {
         <DateNav date={date} />
       </div>
 
-      {!payload ? (
-        <div className="mt-6 rounded-2xl border p-4">
-          <p className="text-gray-700">No hay métricas para esta fecha.</p>
-          <form action={recalcAndSave} method="post" className="mt-4">
-            <input type="hidden" name="code" value={code} />
-            <input type="hidden" name="date" value={date} />
-            <RecalcButton disabled={!canRecalc} label={canRecalc ? "Calcular y guardar" : "Sin datos para recalcular"} />
-          </form>
+      <div className="mt-6 rounded-2xl border p-4">
+        {/* Panel interactivo: gráfica centrada, score/badges debajo y biomarcadores reactivos */}
+        <ScorePanel
+          code={code}
+          points={points}
+          rows={rows}
+          initial={initial}
+          onRecalc={recalcAndSave}
+          canRecalc={canRecalc}
+        />
+
+        <div className="mt-5 text-xs text-gray-500">
+          * “computed” = calculado al vuelo (no guardado). “cached” = leído de{" "}
+          <code>daily_scores</code>.
         </div>
-      ) : (
-        <div className="mt-6 rounded-2xl border p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-4xl font-bold">
-                {Math.round(payload.score)}<span className="text-xl">/100</span>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full px-2 py-1 border">{payload.mode}</span>
-                {payload.coverage_percent != null && (
-                  <span className="rounded-full px-2 py-1 border">cobertura: {payload.coverage_percent}%</span>
-                )}
-                {payload.reliability_flag && (
-                  <span
-                    className={`rounded-full px-2 py-1 border ${
-                      payload.reliability_flag === "green"
-                        ? "border-green-500 text-green-600"
-                        : payload.reliability_flag === "yellow" || payload.reliability_flag === "amber"
-                        ? "border-yellow-500 text-yellow-600"
-                        : "border-red-500 text-red-600"
-                    }`}
-                  >
-                    {payload.reliability_flag}
-                  </span>
-                )}
-              </div>
-              {payload.last_saved_at && (
-                <div className="mt-1 text-xs text-gray-500">
-                  last_saved_at: {new Date(payload.last_saved_at).toISOString()}
-                </div>
-              )}
-            </div>
-
-            {/* Timeline interactivo (30 días visibles; arrastra el brush para mover/zoom) */}
-            <div className="w-1/2 min-w-[220px]">
-              <ScoreTimeline data={series} windowDays={30} />
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-            {Object.entries(payload.subscores).map(([k, v]) => (
-              <div key={k} className="flex justify-between border rounded-xl px-3 py-2">
-                <span className="truncate">{k}</span>
-                <span className="font-medium">{v == null ? "—" : Number(v).toFixed(1)}</span>
-              </div>
-            ))}
-          </div>
-
-          <form action={recalcAndSave} method="post" className="mt-6">
-            <input type="hidden" name="code" value={code} />
-            <input type="hidden" name="date" value={date} />
-            <RecalcButton disabled={!canRecalc} label={canRecalc ? "Recalcular y guardar" : "Sin datos para recalcular"} />
-          </form>
-
-          <div className="mt-5 text-xs text-gray-500">
-            * “computed” = calculado al vuelo (no guardado). “cached” = leído de <code>daily_scores</code>.
-          </div>
-        </div>
-      )}
+      </div>
     </main>
   );
 }
-
