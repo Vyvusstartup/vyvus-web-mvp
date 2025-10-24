@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ScoreTimeline from "../ScoreTimeline";
-import RecalcButton from "../RecalcButton";
+import ScoreTimeline from "./ScoreTimeline";
+import RecalcButton from "./RecalcButton";
 
 type Subscores = Record<string, number | null>;
 
