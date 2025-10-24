@@ -3,7 +3,8 @@ import supabaseAdmin from "@/lib/supabaseAdmin";
 import { redirect } from "next/navigation";
 import RecalcButton from "../RecalcButton";
 import DateNav from "../DateNav";
-import Sparkline from "../Sparkline";
+// ⬇️ Nuevo: timeline interactivo con Recharts
+import ScoreTimeline from "../ScoreTimeline";
 
 export const revalidate = 0;
 
@@ -128,7 +129,8 @@ export default async function TesterPage({ params, searchParams }: Props) {
   const [cached, canon, series] = await Promise.all([
     getCachedScore(userId, date),
     readCanonicalMetrics(userId, date),
-    getScoreSeries(userId, date, 30),
+    // ⬇️ Más historial para el timeline
+    getScoreSeries(userId, date, 120),
   ]);
 
   let computed:
@@ -220,8 +222,10 @@ export default async function TesterPage({ params, searchParams }: Props) {
               )}
             </div>
 
-            {/* Sparkline 30 días */}
-            <Sparkline data={series} />
+            {/* Timeline interactivo (30 días visibles; arrastra el brush para mover/zoom) */}
+            <div className="w-1/2 min-w-[220px]">
+              <ScoreTimeline data={series} windowDays={30} />
+            </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
@@ -247,3 +251,4 @@ export default async function TesterPage({ params, searchParams }: Props) {
     </main>
   );
 }
+
