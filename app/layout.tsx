@@ -5,6 +5,7 @@ import LangSwitcher from "@/components/LangSwitcher";
 import LayoutTagline from "@/components/LayoutTagline";
 import LayoutFooter from "@/components/LayoutFooter";
 import RegisterSW from "@/components/RegisterSW";
+import Providers from "./providers"; // <- PostHog Provider (cliente)
 
 export const metadata = {
   title: "Vyvus — Longevity Score (DEMO)",
@@ -34,30 +35,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body>
-        <I18nProvider>
-          {/* registra el Service Worker */}
-          <RegisterSW />
+        <Providers>
+          <I18nProvider>
+            {/* registra el Service Worker */}
+            <RegisterSW />
 
-          <div className="container py-8">
-            <header className="mb-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold">Vyvus — Longevity Score (DEMO)</h1>
-                  <LayoutTagline />
+            <div className="container py-8">
+              <header className="mb-8">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-bold">Vyvus — Longevity Score (DEMO)</h1>
+                    <LayoutTagline />
+                  </div>
+                  <LangSwitcher />
                 </div>
-                <LangSwitcher />
-              </div>
-            </header>
+              </header>
 
-            {children}
+              {children}
 
-            <footer>
-              <LayoutFooter />
-            </footer>
-          </div>
-        </I18nProvider>
+              <footer>
+                <LayoutFooter />
+              </footer>
+            </div>
+          </I18nProvider>
+        </Providers>
       </body>
     </html>
   );
 }
-
