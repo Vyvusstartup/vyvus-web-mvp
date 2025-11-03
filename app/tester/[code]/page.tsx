@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import RecalcButton from "../RecalcButton";
 import DateNav from "../DateNav";
 import ScorePanel from "../ScorePanel";
+import TesterViewEvent from "./TesterViewEvent"; // <-- Telemetría
 
 export const revalidate = 0;
 
@@ -143,6 +144,8 @@ export default async function TesterPage({ params, searchParams }: Props) {
   if (!userId) {
     return (
       <main className="max-w-xl mx-auto p-6">
+        {/* Telemetría: vista sin user_id */}
+        <TesterViewEvent testerCode={code} date={date} />
         <h1 className="text-2xl font-semibold">Tester {code}</h1>
         <p className="mt-3 text-red-600">
           No se encontró <code>user_id</code> para este <code>tester_code</code>.
@@ -202,6 +205,7 @@ export default async function TesterPage({ params, searchParams }: Props) {
   if (!payload && rows.length === 0) {
     return (
       <main className="max-w-xl mx-auto p-6">
+        <TesterViewEvent testerCode={code} date={date} /> {/* Telemetría */}
         <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
         <p className="text-gray-500 mt-1">
           DEMO without population calibration or integrations. Educational content. Not medical advice.
@@ -250,6 +254,7 @@ export default async function TesterPage({ params, searchParams }: Props) {
 
   return (
     <main className="max-w-xl mx-auto p-6">
+      <TesterViewEvent testerCode={code} date={date} /> {/* Telemetría */}
       <h1 className="text-2xl font-semibold">Vyvus — Longevity Score (DEMO)</h1>
       <p className="text-gray-500 mt-1">
         DEMO without population calibration or integrations. Educational content. Not medical advice.
@@ -280,3 +285,4 @@ export default async function TesterPage({ params, searchParams }: Props) {
     </main>
   );
 }
+
