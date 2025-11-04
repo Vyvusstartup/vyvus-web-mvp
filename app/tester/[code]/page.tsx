@@ -225,6 +225,8 @@ export default async function TesterPage({ params, searchParams }: Props) {
             <RecalcButton
               disabled={!canRecalc}
               label={canRecalc ? "Calcular y guardar" : "Sin datos para recalcular"}
+              testerCode={code}
+              date={date}
             />
           </form>
         </div>
