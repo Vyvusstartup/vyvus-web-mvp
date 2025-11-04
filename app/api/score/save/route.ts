@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { sha256hex } from "@/lib/hashToken";
+import { captureServer } from "@/lib/telemetry"; // <-- Telemetría servidor
 
 type RowCanon = {
   vo2max_mlkgmin: number | null;
@@ -22,7 +23,7 @@ const todayUTC = () => new Date().toISOString().slice(0, 10);
 
 function coveragePercent(canon: RowCanon): number {
   const vals = Object.values(canon);
-  const present = vals.filter(v => v !== null && v !== undefined).length;
+  const present = vals.filter((v) => v !== null && v !== undefined).length;
   const total = vals.length || 10;
   return Math.round((present / total) * 100);
 }
@@ -135,6 +136,18 @@ export async function POST(req: Request) {
         { onConflict: "user_id,measured_date" }
       );
     if (upErr) return new Response(JSON.stringify({ error: "DB write failed" }), { status: 500 });
+
+    // --- 5) Telemetría: score_saved ---
+    captureServer("score_saved", {
+      distinct_id: user_id,
+      user_id,
+      tester_code,
+      measured_date,
+      coverage_percent,
+      reliability_flag: data.reliability_flag ?? null,
+      score_version: "v1",
+      source: "api/score/save",
+    });
 
     return new Response(
       JSON.stringify({
