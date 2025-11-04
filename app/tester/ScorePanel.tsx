@@ -132,6 +132,8 @@ export default function ScorePanel({
         <RecalcButton
           disabled={!canRecalc}
           label={canRecalc ? "Recalcular y guardar" : "Sin datos para recalcular"}
+          testerCode={code}
+          date={active.date}
         />
       </form>
     </div>
