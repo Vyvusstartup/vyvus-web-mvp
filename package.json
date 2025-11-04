@@ -16,6 +16,8 @@
         "react-dom": "18.2.0",
         "recharts": "^3.3.0",
         "posthog-js": "^1.120.0"
+        "posthog-node": "^3.5.0"
+
     },
     "devDependencies": {
         "@types/node": "20.12.7",
